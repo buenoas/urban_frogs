@@ -109,7 +109,7 @@ ggsave(gg_pcoa, filename = "pcoa.png", dpi = 600,
        width = 15, height = 15, units = "cm")
 
 
-# GraficO da ocorrencia das especies nos sitios
+# Grafico da ocorrencia das especies nos sitios
 # Prepara os dados
 # Numero de sitios ocupados por cada especies
 sites_occ = data.frame(
