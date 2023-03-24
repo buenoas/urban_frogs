@@ -1,3 +1,8 @@
+###############################################
+### Analise dos dados de sapos urbanos ########
+### Dissertacao do Paulo Mateus Cruz Santos ###
+###############################################
+
 # Define a area de trabalho
 setwd("C:/Users/asb_r/Downloads/Arbimon Matches-20230324T111553Z-001")
 
@@ -102,3 +107,46 @@ gg_pcoa
 # Salva o grafico
 ggsave(gg_pcoa, filename = "pcoa.png", dpi = 600,
        width = 15, height = 15, units = "cm")
+
+
+# GraficO da ocorrencia das especies nos sitios
+# Prepara os dados
+# Numero de sitios ocupados por cada especies
+sites_occ = data.frame(
+  freq = sort(colSums(ifelse(df_ab > 0, 1, 0))))
+
+# Ordena as especies com base no numero de sitios ocupados
+sites_occ$species = factor(rownames(sites_occ),
+                           levels = rownames(sites_occ))
+
+# Remove o nome das linhas
+rownames(sites_occ) = NULL
+
+# Reordena as colunas
+sites_occ = sites_occ[, 2:1]
+
+# Produz o grafico
+gg_occ = 
+  
+  ggplot(data = sites_occ,
+         aes(x = freq/41 * 100, y = species)) + 
+  
+  labs(x = "Sites occupied (%)",
+       y = NULL,
+       title = "Diurnal frogs distribution in 41 sites",
+       subtitle = "Passive acoustic monitoring data") +
+  
+  geom_col(fill = "darkgreen", width = 0.8) + 
+  
+  theme_minimal(base_size = 12) +
+  theme(axis.title.x = element_text(colour = "black"),
+        axis.text.x = element_text(colour = "black"),
+        axis.text.y = element_text(colour = "black", face = "italic"),
+        axis.ticks = element_blank())
+
+# Visualiza o grafico
+gg_occ
+
+# Salva o grafico
+ggsave(gg_occ, filename = "occurrence.png", dpi = 600,
+       width = 20, height = 15, units = "cm")
