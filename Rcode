@@ -1,0 +1,104 @@
+# Define a area de trabalho
+setwd("C:/Users/asb_r/Downloads/Arbimon Matches-20230324T111553Z-001")
+
+# Limpa a area de trabalho
+remove(list = ls())
+
+# Desabilita a notacao cientifica
+options(scipen = 999)
+
+# Carrega os pacotes
+library(vegan)
+library(stringr)
+library(plyr)
+library(ggplot2)
+
+# Importa os dados das especies
+x = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/arbimon.csv")
+
+# Mantem apenas as deteccoes validadas
+x_sub = subset(x, validated == "present")
+
+# Cria uma coluna em que cada linha eh um registro de ocorrencia
+x_sub$occurrence = 1
+
+# Cria uma matriz de abundancia de sitios x especies
+df_ab = as.data.frame(
+  tapply(x_sub$occurrence,
+         list(x_sub$site, x_sub$species),
+         sum))
+
+# Converte NA em zero
+df_ab[is.na(df_ab)] = 0
+
+# Faz uma analise de ordenacao multivariada (PCoA)
+# Padroniza os dados
+frogs.std = df_ab/rowSums(df_ab) # dados de abundancia relativa
+#frogs.std = decostand(df_ab, method = "pa") # dados de presence-absencia
+
+# Calcula a distancia de Bray-Curtis entre os sitios
+bray = vegdist(frogs.std, method = "bray")
+
+# PCoA
+pcoa = cmdscale(bray, k = 2, eig = TRUE, add = TRUE)
+
+# Extrai os valores dos 2 primeiros eixos da PCoA
+positions = as.data.frame(pcoa$points)
+
+# Renomeia as colunas
+colnames(positions) = c("PCo1", "PCo2")
+
+# Adiciona o codigo do municipio
+positions$city_code = word(rownames(positions), 1, sep = "_")
+
+# Adiciona o nome do municipio
+positions$city_name = positions$city_code
+positions$city_name[positions$city_name == "IR"] = "Iranduba"
+positions$city_name[positions$city_name == "IT"] = "Itacoatiara"
+positions$city_name[positions$city_name == "MC"] = "Manacapuru"
+positions$city_name[positions$city_name == "MA"] = "Manaus"
+positions$city_name[positions$city_name == "PF"] = "Presidente Figueiredo"
+positions$city_name[positions$city_name == "RPE"] = "Rio Preto da Eva"
+
+# Porcentagem de explicacao dos eixos
+percentage_explained = 100 * pcoa$eig / sum(pcoa$eig)
+
+# Poligonos do grafico
+find_hull = function(positions) positions[chull(positions$PCo1, positions$PCo2), ]
+hulls = ddply(positions, "city_name", find_hull)
+
+# Produz o grafico com os 2 primeiros eixos da PCoA
+gg_pcoa = 
+  
+  ggplot(data = positions[order(positions$PCo1, positions$PCo2), ],
+         aes(x = PCo1, y = PCo2,
+             colour = city_name, fill = city_name)) + 
+  
+  labs(x = paste0("PCo 1 ", "(", round(percentage_explained[1]), "%)"),
+       y = paste0("PCo 2 ", "(", round(percentage_explained[2]), "%)"),
+       colour = NULL,
+       fill = NULL,
+       title = "Diurnal frogs in six Amazonian cities",
+       subtitle = "Passive acoustic monitoring data") +
+  
+  scale_colour_brewer(type = "qual", palette = "Set1") +
+  scale_fill_brewer(type = "qual", palette = "Set1") +
+  
+  geom_polygon(data = hulls, aes(colour = NULL),
+               alpha = 0.2, show.legend = FALSE) +
+  
+  geom_point(size = 4, shape = 21, colour = "black", alpha = 0.6) +
+  
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black", size = 1/3),
+        axis.line = element_line(colour = "black", size = 1/3),
+        legend.position = "bottom")
+
+# Visualiza o grafico
+gg_pcoa
+
+# Salva o grafico
+ggsave(gg_pcoa, filename = "pcoa.png", dpi = 600,
+       width = 15, height = 15, units = "cm")
