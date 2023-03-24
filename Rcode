@@ -97,8 +97,8 @@ gg_pcoa =
   theme_classic(base_size = 12) +
   theme(axis.title = element_text(colour = "black"),
         axis.text = element_text(colour = "black"),
-        axis.ticks = element_line(colour = "black", size = 1/3),
-        axis.line = element_line(colour = "black", size = 1/3),
+        axis.ticks = element_line(colour = "black"),
+        axis.line = element_line(colour = "black"),
         legend.position = "bottom")
 
 # Visualiza o grafico
