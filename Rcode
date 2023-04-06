@@ -18,11 +18,126 @@ library(stringr)
 library(plyr)
 library(ggplot2)
 
-# Importa os dados das especies
-x = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/arbimon.csv")
+
+#####################################
+### IMPORTA OS DADOS DAS ESPECIES ###
+#####################################
+
+# Adenomera andreae
+A_andreae = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_andreae_ALL.csv")
+
+# Allobates femoralis
+A_femoralis = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_femoralis_ALL.csv")
+
+# Ameerega hahneli (vazio)
+A_hahneli = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_hahneli_ALL2.csv")
+
+# Adenomera hylaedactyla
+A_hylaedactyla = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_hylaedactyla___.csv")
+
+# Amazophrynella manaos
+A_manaos = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_manaos_ALL.csv")
+A_manaos$species[A_manaos$species == "Amazophrynella minuta"] = "Amazophrynella manaos" # atualiza o nome da especie
+
+# Allobates paleovarzensis
+A_paleovarzensis = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_paleovarzensis_ALL__.csv")
+
+# Atelopus spumarius
+A_spumarius = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_spumarius_ALL.csv")
+
+# Anomaloglossus stepheni
+A_stepheni = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_stepheni.csv")
+
+# Allobates sumtuosus
+A_sumtuosus = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_sumtuosus_ALL_7.csv")
+
+# Ameerega trivittata
+A_trivittata = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_trivittata_ALL.csv")
+
+# Chiasmocleis shudikarensis
+C_shudikarensis = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/C_shudikarensis_ALL_.csv")
+
+# Dendropsophus minutus
+D_minutus = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/D_minutus_ALL.csv")
+
+# Elachistocleis bicolor
+E_bicolor = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/E_bicolor_ALL.csv")
+
+# Leptodactylus petersii
+L_petersii = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/L_petersii_ALL.csv")
+
+# Leptodactylus stenodema
+L_stenodema = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/L_stenodema_ALL_teste.csv")
+
+# Pristimantis fenestratus
+P_fenestratus = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/P_fenestratus_ALL.csv")
+
+# Rhinella proboscidea
+R_proboscidea = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/R_proboscidea_ALL____.csv")
+
+# Synapturanus mirandaribeiroi
+S_mirandaribeiroi = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/S_mirandaribeiroi_m1.csv")
+
+# Synapturanus salseri
+S_salseri = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/S_salseri_ALL.csv")
+
+
+# JUNTA OS DADOS BRUTOS DAS ESPECIES
+# Ameerega hahneli nao aparece, porque nao foi detectada pelo Pattern Matching (Arbimon)
+frogs_raw = rbind(A_andreae,
+                  A_femoralis,
+                  A_hahneli,
+                  A_hylaedactyla,
+                  A_manaos,
+                  A_paleovarzensis,
+                  A_spumarius,
+                  A_stepheni,
+                  A_sumtuosus,
+                  A_trivittata,
+                  C_shudikarensis,
+                  D_minutus,
+                  E_bicolor,
+                  L_petersii,
+                  L_stenodema,
+                  P_fenestratus,
+                  R_proboscidea,
+                  S_mirandaribeiroi,
+                  S_salseri)
+
+# Das 19 especies investigadas, 18 foram detectadas pelo Pattern Matching (Arbimon)
+sort(unique(frogs_raw$species))
+
+# Das 18 especies detectadas pelo Pattern Matching (Arbimon), 13 foram validadas (TRUE POSITIVES)
+sort(unique(subset(frogs_raw, validated == "present")$species))
+
+# O nome de todas as especies esta correto, conforme a lista de Frost (acesso em 2023-04-06)
+# https://amphibiansoftheworld.amnh.org/content/search?subtree=&subtree_id=&country%5B%5D=194&search_type=count
+
+
+# Ha 69319 gravacoes na playlist TUDO
+# Conferir se esse numero vai bater com os arquivos que receberei do Arbimon
+
+
+###################################
+### IMPORTA OS DADOS DOS SITIOS ###
+###################################
+
+# Sitios (conforme Arbimon)
+sites = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sites-export.csv")
+
+# Remove os sitios "Fonte" e "frogs"
+sites = sites[-which(sites$Name == c("Fonte", "frogs")), ]
+
+# Renumera as linhas
+rownames(sites) = NULL
+
+
+#########################
+### ANALISE DOS DADOS ###
+#########################
 
 # Mantem apenas as deteccoes validadas
-x_sub = subset(x, validated == "present")
+x_sub = subset(frogs_raw, validated == "present")
 
 # Cria uma coluna em que cada linha eh um registro de ocorrencia
 x_sub$occurrence = 1
@@ -129,11 +244,11 @@ sites_occ = sites_occ[, 2:1]
 gg_occ = 
   
   ggplot(data = sites_occ,
-         aes(x = freq/41 * 100, y = species)) + 
+         aes(x = freq/36 * 100, y = species)) + 
   
   labs(x = "Sites occupied (%)",
        y = NULL,
-       title = "Diurnal frogs distribution in 41 sites",
+       title = "Diurnal frogs distribution in 36 sites",
        subtitle = "Passive acoustic monitoring data") +
   
   geom_col(fill = "darkgreen", width = 0.8) + 
@@ -148,5 +263,5 @@ gg_occ =
 gg_occ
 
 # Salva o grafico
-ggsave(gg_occ, filename = "occurrence.png", dpi = 600,
+ggsave(gg_occ, filename = "occurrence.jpg", dpi = 600,
        width = 20, height = 15, units = "cm")
