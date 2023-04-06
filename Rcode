@@ -4,7 +4,7 @@
 ###############################################
 
 # Define a area de trabalho
-setwd("C:/Users/asb_r/Downloads/Arbimon Matches-20230324T111553Z-001")
+setwd("C:/Users/anderson/OneDrive/Documents/Pesquisa/Paulo")
 
 # Limpa a area de trabalho
 remove(list = ls())
