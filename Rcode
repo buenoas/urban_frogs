@@ -110,12 +110,8 @@ sort(unique(frogs_raw$species))
 # Das 18 especies detectadas pelo Pattern Matching (Arbimon), 13 foram validadas (TRUE POSITIVES)
 sort(unique(subset(frogs_raw, validated == "present")$species))
 
-# O nome de todas as especies esta correto, conforme a lista de Frost (acesso em 2023-04-06)
+# O nome de todas as especies esta correto, conforme a lista de Frost (2023-04-06)
 # https://amphibiansoftheworld.amnh.org/content/search?subtree=&subtree_id=&country%5B%5D=194&search_type=count
-
-
-# Ha 69319 gravacoes na playlist TUDO
-# Conferir se esse numero vai bater com os arquivos que receberei do Arbimon
 
 
 ###################################
