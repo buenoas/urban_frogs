@@ -265,7 +265,7 @@ gg_occ =
   ggplot(data = sites_occ,
          aes(x = freq/36 * 100, y = species)) + 
   
-  labs(x = "Sites occupied (%)",
+  labs(x = "Site occurrence (%)",
        y = NULL,
        title = "Diurnal frogs distribution in 36 sites",
        subtitle = "Passive acoustic monitoring data") +
