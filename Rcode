@@ -153,6 +153,11 @@ rownames(sites) = NULL
 # Mantem apenas as deteccoes validadas
 x_sub = subset(frogs_raw, validated == "present")
 
+# Remove as deteccoes duplicadas
+# Deteccoes duplicadas sao aquelas com mais de um registro da mesma especie na mesma gravacao
+# Segundo a dissertacao do Paulo, a mesma gravacao poderia ter ate tres registros da mesma especie
+x_sub = unique(x_sub[, c("recording", "site", "hour", "minute", "species")])
+
 # Cria uma coluna em que cada linha eh um registro de ocorrencia
 x_sub$occurrence = 1
 
