@@ -286,9 +286,8 @@ ggsave(gg_occ, filename = "occurrence.jpg", dpi = 600,
        width = 20, height = 15, units = "cm")
 
 
-### Frequencia de incidencia por horario do dia para cada especie
+# Grafico da frequencia de incidencia por horario do dia para cada especie
 # Prepara os dados
-
 freq_hour = as.data.frame(tapply(x_sub$occurrence, list(x_sub$hour, x_sub$species), sum))
 
 # Converte NA em zero
@@ -299,7 +298,7 @@ freq_hour_prop = as.data.frame(apply(freq_hour, 2, function(x) x/sum(x)) * 100)
 
 for (i in 1:ncol(freq_hour_prop)) {
   
-  # Prepara os dados para produzir o grafico (diagrama de rosas)
+  # Prepara os dados para produzir o grafico (diagrama de rosa)
   dat = data.frame(freq = freq_hour_prop[, i], hour = 0:23)
   
   rosa = 
