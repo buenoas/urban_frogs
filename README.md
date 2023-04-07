@@ -5,5 +5,5 @@ Este repositório contém os arquivos em formato "csv" baixados da plataforma Ar
 
 - **sites-export.csv:** metadados dos sítios onde os gravadores de áudio autônomos foram instalados.
 - **export-recording.csv:** conjunto de arquivos de áudio (gravações) utilizado para detectar sapos por meio do algoritmo *Pattern Matching* no Arbimon. Tais gravações compõe a playlist denominada "TUDO".
-- **demais arquivos csv:** arquivos para cada uma das 19 espécies investigadas com o resultado das detecções (via *Pattern Matching*) e validações (feitas por humanos para confirmar se as detecções eram verdadeiros-positivos). Das 19 espécies, 13 foram detectadas no estudo.
+- **demais arquivos csv:** arquivos para cada uma das 19 espécies investigadas com o resultado das detecções (via *Pattern Matching*) e validações (feitas por humanos para confirmar se as detecções eram verdadeiros-positivos). Das 19 espécies, 13 foram detectadas no estudo (*i.e.*, pelo menos uma detecção verdadeiro-positivo).
 - **Rcode.R:** código R utilizado para analisar os dados de sapos, escrito por Anderson Saldanha Bueno. O Rcode está em constante atualização.
