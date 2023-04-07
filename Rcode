@@ -4,7 +4,7 @@
 ###############################################
 
 # Define a area de trabalho
-setwd("C:/Users/anderson/OneDrive/Documents/Pesquisa/Paulo")
+setwd("C:/Users/carla/OneDrive/Documentos/diagrama_rosas_Paulo")
 
 # Limpa a area de trabalho
 remove(list = ls())
@@ -113,6 +113,17 @@ sort(unique(subset(frogs_raw, validated == "present")$species))
 # O nome de todas as especies esta correto, conforme a lista de Frost (2023-04-06)
 # https://amphibiansoftheworld.amnh.org/content/search?subtree=&subtree_id=&country%5B%5D=194&search_type=count
 
+# Remove alguns sitios
+# MA_11 e RPE_5_B nao entraram na playlist denominada "TUDO"
+# IT_6_B e MA_5_C tiveram zero gravacoes
+# MA_5_B, MA_5_C, RPE_5_B e IT_7_B nao possuem variaveis locais
+
+# Remove o sitio MA_5_B
+frogs_raw = frogs_raw[-which(frogs_raw$site == "MA_5_B"), ]
+
+# Remove o sitio IT_7_B
+frogs_raw = frogs_raw[-which(frogs_raw$site == "IT_7_B"), ]
+
 
 ###################################
 ### IMPORTA OS DADOS DOS SITIOS ###
@@ -121,8 +132,15 @@ sort(unique(subset(frogs_raw, validated == "present")$species))
 # Sitios (conforme Arbimon)
 sites = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sites-export.csv")
 
-# Remove os sitios "Fonte" e "frogs"
-sites = sites[-which(sites$Name == c("Fonte", "frogs")), ]
+# Remove alguns sitios
+sites = sites[-which(sites$Name == "Fonte"), ]
+sites = sites[-which(sites$Name == "frogs"), ]
+sites = sites[-which(sites$Name == "MA_11"), ]
+sites = sites[-which(sites$Name == "RPE_5_B"), ]
+sites = sites[-which(sites$Name == "IT_6_B"), ]
+sites = sites[-which(sites$Name == "MA_5_C"), ]
+sites = sites[-which(sites$Name == "MA_5_B"), ]
+sites = sites[-which(sites$Name == "IT_7_B"), ]
 
 # Renumera as linhas
 rownames(sites) = NULL
@@ -261,3 +279,83 @@ gg_occ
 # Salva o grafico
 ggsave(gg_occ, filename = "occurrence.jpg", dpi = 600,
        width = 20, height = 15, units = "cm")
+
+
+### Frequencia de incidencia por horario do dia para cada especie
+# Prepara os dados
+
+freq_hour = as.data.frame(tapply(x_sub$occurrence, list(x_sub$hour, x_sub$species), sum))
+
+# Converte NA em zero
+freq_hour[is.na(freq_hour)] = 0
+
+# Converte registros em proporcao
+freq_hour_prop = as.data.frame(apply(freq_hour, 2, function(x) x/sum(x)) * 100)
+
+for (i in 1:ncol(freq_hour_prop)) {
+  
+  # Prepara os dados para produzir o grafico (diagrama de rosas)
+  dat = data.frame(freq = freq_hour_prop[, i], hour = 0:23)
+  
+  rosa = 
+    
+    ggplot(data = dat,
+           aes(x = hour, y = freq/sum(freq) * 100)) +
+    
+    ggtitle(bquote(atop(italic(.(names(freq_hour_prop)[i])),
+                        "(n ="~.(paste(sum(freq_hour[, i])))*")"))) +
+    
+    labs(x = "Time (1-hour block)") +
+    
+    lims(y = c(0, max(dat$freq))) +
+    
+    scale_x_continuous(breaks = 0:23) +
+    
+    geom_bar(stat = "identity") +
+    
+    geom_rect(aes(xmin = -Inf, xmax = 7, ymin = -Inf, ymax = Inf), fill = "#CFCFDB") + # noite
+    geom_rect(aes(xmin = 6, xmax = 18, ymin = -Inf, ymax = Inf), fill = "#FFF6C7") + # dia
+    geom_rect(aes(xmin = 18, xmax = Inf, ymin = -Inf, ymax = Inf), fill = "#CFCFDB") + # noite
+    
+    #geom_rect(aes(xmin = 6, xmax = 8, ymin = -Inf, ymax = Inf), fill = "#FAFBBD") + # dawn
+    #geom_rect(aes(xmin = 8, xmax = 18, ymin = -Inf, ymax = Inf), fill = "#FDE050") + # day
+    #geom_rect(aes(xmin = 18, xmax = 20, ymin = -Inf, ymax = Inf), fill = "#5995B7") + # dusk
+    #geom_rect(aes(xmin = 20, xmax = Inf, ymin = -Inf, ymax = Inf), fill = "#16498A") + # night
+    #geom_rect(aes(xmin = -Inf, xmax = 6, ymin = -Inf, ymax = Inf), fill = "#16498A") + # night
+    
+    geom_vline(xintercept = seq(0, 23, 1),
+               colour = "black", linetype = "dashed", size = 0.25, alpha = 0.25) + # "#EBEBEB" cinza
+    
+    geom_bar(stat = "identity", fill = "black", colour = "white", size = 0.2) +
+    
+    geom_hline(yintercept = seq(0, 90, 10),
+               colour = "black", linetype = "dashed", size = 0.25, alpha = 0.25) +
+    
+    annotate(geom = "label", x = 12, y = 10, size = 2.25, label = 0.1, fill = "white") +
+    annotate(geom = "label", x = 12, y = 20, size = 2.25, label = 0.2, fill = "white") +
+    annotate(geom = "label", x = 12, y = 30, size = 2.25, label = 0.3, fill = "white") +
+    annotate(geom = "label", x = 12, y = 40, size = 2.25, label = 0.4, fill = "white") +
+    annotate(geom = "label", x = 12, y = 50, size = 2.25, label = 0.5, fill = "white") +
+    annotate(geom = "label", x = 12, y = 60, size = 2.25, label = 0.6, fill = "white") +
+    annotate(geom = "label", x = 12, y = 70, size = 2.25, label = 0.7, fill = "white") +
+    annotate(geom = "label", x = 12, y = 80, size = 2.25, label = 0.8, fill = "white") +
+    annotate(geom = "label", x = 12, y = 90, size = 2.25, label = 0.9, fill = "white") +
+    
+    coord_polar(start = 3.0105, direction = 1) +
+    
+    theme_minimal() +
+    theme(panel.grid = element_blank(),
+          plot.title = element_text(hjust = 0.5, face = "bold"),
+          axis.title = element_blank(),
+          axis.text.x = element_text(colour = "black"),
+          axis.text.y = element_blank(),
+          legend.position = "bottom")
+  
+  rosa
+  
+  ggsave(rosa, filename = paste0("C:/Users/carla/OneDrive/Documentos/diagrama_rosas_Paulo/", names(freq_hour_prop)[i], ".jpg"),
+         dpi = 600, h = 15, w = 15, units = "cm")
+  
+  print(i)
+  
+}
