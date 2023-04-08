@@ -151,6 +151,19 @@ rownames(sites) = NULL
 # Importa a lista de arquivos de gravacao da playlist "TUDO"
 recordings = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/export-recording.csv")
 
+# Adiciona a hora e o minuto da gravacao
+recordings$hour = str_sub(recordings$filename, -10, -9)
+recordings$minute = str_sub(recordings$filename, -7, -6)
+
+# Substitui ano com 2 digitos para ano com 4 digitos
+recordings$year = str_sub(recordings$filename, -21, -18)
+
+# Adiciona o dia Juliano
+recordings$Julian_day = format(as.Date(gsub("/", "-", recordings$date)), "%j") 
+
+# Remove a coluna "date"
+recordings$date = NULL
+
 
 #########################
 ### ANALISE DOS DADOS ###
@@ -381,13 +394,13 @@ for (i in 1:ncol(freq_hour_prop)) {
 # O raster do MapBiomas corresponde a colecao 7, ano 2020
 mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
 
-# Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
-source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
-
 # Transforma as coordenadas dos sitios em um shapefile de pontos
-sites_shp = SpatialPointsDataFrame(coords = sites[, 4:3],
+sites_shp = SpatialPointsDataFrame(coords = sites[, 4:3], # 4 = Longitude, 3 = Latitude
                                    data = sites,
                                    proj4string = mapbiomas@crs)
+
+# Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
+source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
 
 # Calcular a cobertura de floresta para varios tamanhos de buffer
 # "3" = floresta
