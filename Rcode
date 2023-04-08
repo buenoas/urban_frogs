@@ -17,6 +17,9 @@ library(vegan)
 library(stringr)
 library(plyr)
 library(ggplot2)
+library(rgdal)
+library(rgeos)
+library(raster)
 
 
 #####################################
@@ -364,3 +367,13 @@ for (i in 1:ncol(freq_hour_prop)) {
   print(i)
   
 }
+
+
+##########################
+### ANALISES ESPACIAIS ###
+##########################
+
+# Importa o raster da area de estudo
+# A area de estudo abrange os seis municipios da regiao metropolitana de Manaus
+# O raster do MapBiomas corresponde a colecao 7, ano 2020
+mapbiomas = r = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
