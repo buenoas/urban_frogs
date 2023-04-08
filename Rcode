@@ -164,6 +164,10 @@ recordings$Julian_day = format(as.Date(gsub("/", "-", recordings$date)), "%j")
 # Remove a coluna "date"
 recordings$date = NULL
 
+# Adiciona o esforco amostral (i.e. numeros de gravacoes) por sitio
+effort = data.frame(table(recordings$site))
+sites$Recordings_Playlist = effort$Freq[match(sites$Name, effort$Var1)]
+
 
 #########################
 ### ANALISE DOS DADOS ###
