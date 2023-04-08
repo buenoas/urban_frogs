@@ -151,18 +151,17 @@ rownames(sites) = NULL
 # Importa a lista de arquivos de gravacao da playlist "TUDO"
 recordings = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/export-recording.csv")
 
-# Adiciona a hora e o minuto da gravacao
-recordings$hour = str_sub(recordings$filename, -10, -9)
-recordings$minute = str_sub(recordings$filename, -7, -6)
-
 # Substitui ano com 2 digitos para ano com 4 digitos
-recordings$year = str_sub(recordings$filename, -21, -18)
+recordings$year = as.numeric(paste0(20, recordings$year))
 
 # Adiciona o dia Juliano
-recordings$Julian_day = format(as.Date(gsub("/", "-", recordings$date)), "%j") 
+recordings$julian_day = format(as.Date(gsub("/", "-", recordings$date)), "%j") 
 
 # Remove a coluna "date"
 recordings$date = NULL
+
+# Reordena as colunas
+recordings = recordings[, c(1, 2, 5, 4, 3, 6)]
 
 # Adiciona o esforco amostral (i.e. numeros de gravacoes) por sitio
 effort = data.frame(table(recordings$site))
