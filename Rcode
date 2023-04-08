@@ -174,20 +174,24 @@ sites$Recordings_Playlist = effort$Freq[match(sites$Name, effort$Var1)]
 #########################
 
 # Mantem apenas as deteccoes validadas
-x_sub = subset(frogs_raw, validated == "present")
+frogs_validated = subset(frogs_raw, validated == "present")
 
 # Remove as deteccoes duplicadas
 # Deteccoes duplicadas sao aquelas com mais de um registro da mesma especie na mesma gravacao
 # Segundo a dissertacao do Paulo, a mesma gravacao poderia ter ate tres registros da mesma especie
-x_sub = unique(x_sub[, c("recording", "site", "hour", "minute", "species")])
+frogs_validated = unique(frogs_validated[, c("recording",
+                                             "site",
+                                             "year", "month", "day",
+                                             "hour", "minute",
+                                             "species")])
 
 # Cria uma coluna em que cada linha eh um registro de ocorrencia
-x_sub$occurrence = 1
+frogs_validated$occurrence = 1
 
 # Cria uma matriz de abundancia de sitios x especies
 df_ab = as.data.frame(
-  tapply(x_sub$occurrence,
-         list(x_sub$site, x_sub$species),
+  tapply(frogs_validated$occurrence,
+         list(frogs_validated$site, frogs_validated$species),
          sum))
 
 # Converte NA em zero
@@ -311,7 +315,9 @@ gg_occ
 
 # Grafico da frequencia de incidencia por horario do dia para cada especie
 # Prepara os dados
-freq_hour = as.data.frame(tapply(x_sub$occurrence, list(x_sub$hour, x_sub$species), sum))
+freq_hour = as.data.frame(tapply(frogs_validated$occurrence,
+                                 list(frogs_validated$hour, frogs_validated$species),
+                                 sum))
 
 # Converte NA em zero
 freq_hour[is.na(freq_hour)] = 0
