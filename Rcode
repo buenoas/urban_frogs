@@ -4,7 +4,7 @@
 ###############################################
 
 # Define a area de trabalho
-setwd("C:/Users/carla/OneDrive/Documentos/diagrama_rosas_Paulo")
+#setwd("C:/Users/carla/OneDrive/Documentos/diagrama_rosas_Paulo")
 
 # Limpa a area de trabalho
 remove(list = ls())
@@ -245,8 +245,8 @@ gg_pcoa =
 gg_pcoa
 
 # Salva o grafico
-ggsave(gg_pcoa, filename = "pcoa.png", dpi = 600,
-       width = 15, height = 15, units = "cm")
+#ggsave(gg_pcoa, filename = "pcoa.png", dpi = 600,
+#       width = 15, height = 15, units = "cm")
 
 
 # Grafico da ocorrencia das especies nos sitios
@@ -288,8 +288,8 @@ gg_occ =
 gg_occ
 
 # Salva o grafico
-ggsave(gg_occ, filename = "occurrence.jpg", dpi = 600,
-       width = 20, height = 15, units = "cm")
+#ggsave(gg_occ, filename = "occurrence.jpg", dpi = 600,
+#       width = 20, height = 15, units = "cm")
 
 
 # Grafico da frequencia de incidencia por horario do dia para cada especie
@@ -364,8 +364,8 @@ for (i in 1:ncol(freq_hour_prop)) {
   
   rosa
   
-  ggsave(rosa, filename = paste0("C:/Users/carla/OneDrive/Documentos/diagrama_rosas_Paulo/", names(freq_hour_prop)[i], ".jpg"),
-         dpi = 600, h = 15, w = 15, units = "cm")
+  #ggsave(rosa, filename = paste0("C:/Users/carla/OneDrive/Documentos/diagrama_rosas_Paulo/", names(freq_hour_prop)[i], ".jpg"),
+  #       dpi = 600, h = 15, w = 15, units = "cm")
   
   print(i)
   
@@ -381,9 +381,6 @@ for (i in 1:ncol(freq_hour_prop)) {
 # O raster do MapBiomas corresponde a colecao 7, ano 2020
 mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
 
-# Binariza o raster em floresta (valor do pixel = 3) e nao-floresta (outros valores de pixel)
-values(mapbiomas) = ifelse(values(mapbiomas) == 3, 1, 0) # verde floresta: "#00A600"; cinza nao-floresta: "#F2F2F2"
-
 # Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
 source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
 
@@ -393,28 +390,28 @@ sites_shp = SpatialPointsDataFrame(coords = sites[, 4:3],
                                    proj4string = mapbiomas@crs)
 
 # Calcular a cobertura de floresta para varios tamanhos de buffer
-# "1" = floresta
+# "3" = floresta
 landcover_buffers = list(
-  landcover(mapbiomas, sites_shp, 50)[, "1"],
-  landcover(mapbiomas, sites_shp, 100)[, "1"],
-  landcover(mapbiomas, sites_shp, 150)[, "1"],
-  landcover(mapbiomas, sites_shp, 200)[, "1"],
-  landcover(mapbiomas, sites_shp, 250)[, "1"],
-  landcover(mapbiomas, sites_shp, 300)[, "1"],
-  landcover(mapbiomas, sites_shp, 350)[, "1"],
-  landcover(mapbiomas, sites_shp, 400)[, "1"],
-  landcover(mapbiomas, sites_shp, 450)[, "1"],
-  landcover(mapbiomas, sites_shp, 500)[, "1"],
-  landcover(mapbiomas, sites_shp, 550)[, "1"],
-  landcover(mapbiomas, sites_shp, 600)[, "1"],
-  landcover(mapbiomas, sites_shp, 650)[, "1"],
-  landcover(mapbiomas, sites_shp, 700)[, "1"],
-  landcover(mapbiomas, sites_shp, 750)[, "1"],
-  landcover(mapbiomas, sites_shp, 800)[, "1"],
-  landcover(mapbiomas, sites_shp, 850)[, "1"],
-  landcover(mapbiomas, sites_shp, 900)[, "1"],
-  landcover(mapbiomas, sites_shp, 950)[, "1"],
-  landcover(mapbiomas, sites_shp, 1000)[, "1"])
+  landcover(mapbiomas, sites_shp, 50)[, "3"],
+  landcover(mapbiomas, sites_shp, 100)[, "3"],
+  landcover(mapbiomas, sites_shp, 150)[, "3"],
+  landcover(mapbiomas, sites_shp, 200)[, "3"],
+  landcover(mapbiomas, sites_shp, 250)[, "3"],
+  landcover(mapbiomas, sites_shp, 300)[, "3"],
+  landcover(mapbiomas, sites_shp, 350)[, "3"],
+  landcover(mapbiomas, sites_shp, 400)[, "3"],
+  landcover(mapbiomas, sites_shp, 450)[, "3"],
+  landcover(mapbiomas, sites_shp, 500)[, "3"],
+  landcover(mapbiomas, sites_shp, 550)[, "3"],
+  landcover(mapbiomas, sites_shp, 600)[, "3"],
+  landcover(mapbiomas, sites_shp, 650)[, "3"],
+  landcover(mapbiomas, sites_shp, 700)[, "3"],
+  landcover(mapbiomas, sites_shp, 750)[, "3"],
+  landcover(mapbiomas, sites_shp, 800)[, "3"],
+  landcover(mapbiomas, sites_shp, 850)[, "3"],
+  landcover(mapbiomas, sites_shp, 900)[, "3"],
+  landcover(mapbiomas, sites_shp, 950)[, "3"],
+  landcover(mapbiomas, sites_shp, 1000)[, "3"])
 
 # Coloca os valores de cobertura de floresta lado a lado
 landcover_buffers = do.call(cbind, landcover_buffers)
