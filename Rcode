@@ -84,7 +84,6 @@ S_mirandaribeiroi = read.csv("https://raw.githubusercontent.com/buenoas/urban_fr
 # Synapturanus salseri
 S_salseri = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/S_salseri_ALL.csv")
 
-
 # JUNTA OS DADOS BRUTOS DAS ESPECIES
 # Ameerega hahneli nao aparece, porque nao foi detectada pelo Pattern Matching (Arbimon)
 frogs_raw = rbind(A_andreae,
