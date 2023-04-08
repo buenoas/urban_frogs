@@ -383,3 +383,31 @@ mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/s
 
 # Binariza o raster em floresta (valor do pixel = 3) e nao-floresta (outros valores de pixel)
 values(mapbiomas) = ifelse(values(mapbiomas) == 3, 1, 0) # verde floresta: "#00A600"; cinza nao-floresta: "#F2F2F2"
+
+# Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
+source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
+
+# Calcular a cobertura de floresta para varios tamanhos de buffer
+landcover.buffers = list(
+  landcover(mapbiomas, sites_shp, 50),
+  landcover(mapbiomas, sites_shp, 100),
+  landcover(mapbiomas, sites_shp, 150),
+  landcover(mapbiomas, sites_shp, 200),
+  landcover(mapbiomas, sites_shp, 250),
+  landcover(mapbiomas, sites_shp, 300),
+  landcover(mapbiomas, sites_shp, 350),
+  landcover(mapbiomas, sites_shp, 400),
+  landcover(mapbiomas, sites_shp, 450),
+  landcover(mapbiomas, sites_shp, 500),
+  landcover(mapbiomas, sites_shp, 550),
+  landcover(mapbiomas, sites_shp, 600),
+  landcover(mapbiomas, sites_shp, 650),
+  landcover(mapbiomas, sites_shp, 700),
+  landcover(mapbiomas, sites_shp, 750),
+  landcover(mapbiomas, sites_shp, 800),
+  landcover(mapbiomas, sites_shp, 850),
+  landcover(mapbiomas, sites_shp, 900),
+  landcover(mapbiomas, sites_shp, 950),
+  landcover(mapbiomas, sites_shp, 1000))
+
+landcover.buffers
