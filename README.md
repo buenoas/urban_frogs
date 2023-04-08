@@ -6,5 +6,5 @@ Este repositório contém os arquivos em formato "csv" baixados da plataforma Ar
 - **sites-export.csv:** metadados dos sítios onde os gravadores de áudio autônomos foram instalados.
 - **export-recording.csv:** conjunto de arquivos de áudio (gravações) utilizado para detectar sapos por meio do algoritmo *Pattern Matching* no Arbimon. Tais gravações compõem a playlist denominada "TUDO".
 - **demais arquivos csv:** arquivos para cada uma das 19 espécies investigadas com o resultado das detecções (via *Pattern Matching*) e validações (feitas por humanos para confirmar se as detecções eram positivos-verdadeiros). Das 19 espécies investigadas, 13 foram detectadas no estudo (*i.e.* pelo menos uma detecção positivo-verdadeiro).
-- **study_region.tif:** raster do MapBiomas (coleção 7, ano 2020) cortado para a área de abrangência dos seis municípios amostrados da Região Metropolitana de Manaus.
+- **study_region.tif:** raster do MapBiomas (coleção 7, ano 2020) cortado para a região de abrangência dos seis municípios amostrados da Região Metropolitana de Manaus. O raster original do Brasil foi baixado pelo link <https://storage.googleapis.com/mapbiomas-public/brasil/collection-7/lclu/coverage/brasil_coverage_2020.tif>.
 - **Rcode:** código R utilizado para analisar os dados de sapos, escrito por Anderson Saldanha Bueno. O Rcode está em constante atualização.
