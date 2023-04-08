@@ -376,3 +376,6 @@ for (i in 1:ncol(freq_hour_prop)) {
 # A regiao de estudo abrange os seis municipios amostrados da Regiao Metropolitana de Manaus
 # O raster do MapBiomas corresponde a colecao 7, ano 2020
 mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
+
+# Binariza o raster em floresta (valor do pixel = 3) e nao-floresta (outros valores de pixel)
+values(mapbiomas) = ifelse(values(mapbiomas) == 3, 1, 0) # verde floresta: "#00A600"; cinza nao-floresta: "#F2F2F2"
