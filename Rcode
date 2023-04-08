@@ -387,27 +387,42 @@ values(mapbiomas) = ifelse(values(mapbiomas) == 3, 1, 0) # verde floresta: "#00A
 # Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
 source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
 
-# Calcular a cobertura de floresta para varios tamanhos de buffer
-landcover.buffers = list(
-  landcover(mapbiomas, sites_shp, 50),
-  landcover(mapbiomas, sites_shp, 100),
-  landcover(mapbiomas, sites_shp, 150),
-  landcover(mapbiomas, sites_shp, 200),
-  landcover(mapbiomas, sites_shp, 250),
-  landcover(mapbiomas, sites_shp, 300),
-  landcover(mapbiomas, sites_shp, 350),
-  landcover(mapbiomas, sites_shp, 400),
-  landcover(mapbiomas, sites_shp, 450),
-  landcover(mapbiomas, sites_shp, 500),
-  landcover(mapbiomas, sites_shp, 550),
-  landcover(mapbiomas, sites_shp, 600),
-  landcover(mapbiomas, sites_shp, 650),
-  landcover(mapbiomas, sites_shp, 700),
-  landcover(mapbiomas, sites_shp, 750),
-  landcover(mapbiomas, sites_shp, 800),
-  landcover(mapbiomas, sites_shp, 850),
-  landcover(mapbiomas, sites_shp, 900),
-  landcover(mapbiomas, sites_shp, 950),
-  landcover(mapbiomas, sites_shp, 1000))
+# Transforma as coordenadas dos sitios em um shapefile de pontos
+sites_shp = SpatialPointsDataFrame(coords = sites[, 4:3],
+                                   data = sites,
+                                   proj4string = mapbiomas@crs)
 
-landcover.buffers
+# Calcular a cobertura de floresta para varios tamanhos de buffer
+# "1" = floresta
+landcover_buffers = list(
+  landcover(mapbiomas, sites_shp, 50)[, "1"],
+  landcover(mapbiomas, sites_shp, 100)[, "1"],
+  landcover(mapbiomas, sites_shp, 150)[, "1"],
+  landcover(mapbiomas, sites_shp, 200)[, "1"],
+  landcover(mapbiomas, sites_shp, 250)[, "1"],
+  landcover(mapbiomas, sites_shp, 300)[, "1"],
+  landcover(mapbiomas, sites_shp, 350)[, "1"],
+  landcover(mapbiomas, sites_shp, 400)[, "1"],
+  landcover(mapbiomas, sites_shp, 450)[, "1"],
+  landcover(mapbiomas, sites_shp, 500)[, "1"],
+  landcover(mapbiomas, sites_shp, 550)[, "1"],
+  landcover(mapbiomas, sites_shp, 600)[, "1"],
+  landcover(mapbiomas, sites_shp, 650)[, "1"],
+  landcover(mapbiomas, sites_shp, 700)[, "1"],
+  landcover(mapbiomas, sites_shp, 750)[, "1"],
+  landcover(mapbiomas, sites_shp, 800)[, "1"],
+  landcover(mapbiomas, sites_shp, 850)[, "1"],
+  landcover(mapbiomas, sites_shp, 900)[, "1"],
+  landcover(mapbiomas, sites_shp, 950)[, "1"],
+  landcover(mapbiomas, sites_shp, 1000)[, "1"])
+
+# Coloca os valores de cobertura de floresta lado a lado
+landcover_buffers = do.call(cbind, landcover_buffers)
+
+# Renomeia as colunas
+colnames(landcover_buffers) = paste0("Forest_cover_",
+                                     seq(50, 1000, 50),
+                                     "_m")
+
+# Adiciona o valores de cobertura florestal ao objeto "sites"
+sites = cbind(sites, landcover_buffers)
