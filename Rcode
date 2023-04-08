@@ -127,9 +127,9 @@ frogs_raw = frogs_raw[-which(frogs_raw$site == "MA_5_B"), ]
 frogs_raw = frogs_raw[-which(frogs_raw$site == "IT_7_B"), ]
 
 
-###################################
-### IMPORTA OS DADOS DOS SITIOS ###
-###################################
+###################################################
+### IMPORTA OS DADOS DOS SITIOS E DAS GRAVACOES ###
+###################################################
 
 # Sitios (conforme Arbimon)
 sites = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sites-export.csv")
@@ -137,15 +137,19 @@ sites = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sit
 # Remove alguns sitios
 sites = sites[-which(sites$Name == "Fonte"), ]
 sites = sites[-which(sites$Name == "frogs"), ]
-sites = sites[-which(sites$Name == "MA_11"), ]
-sites = sites[-which(sites$Name == "RPE_5_B"), ]
-sites = sites[-which(sites$Name == "IT_6_B"), ]
-sites = sites[-which(sites$Name == "MA_5_C"), ]
-sites = sites[-which(sites$Name == "MA_5_B"), ]
-sites = sites[-which(sites$Name == "IT_7_B"), ]
+
+#sites = sites[-which(sites$Name == "MA_11"), ]
+#sites = sites[-which(sites$Name == "RPE_5_B"), ]
+#sites = sites[-which(sites$Name == "IT_6_B"), ]
+#sites = sites[-which(sites$Name == "MA_5_C"), ]
+#sites = sites[-which(sites$Name == "MA_5_B"), ]
+#sites = sites[-which(sites$Name == "IT_7_B"), ]
 
 # Renumera as linhas
 rownames(sites) = NULL
+
+# Importa a lista de arquivos de gravacao da playlist "TUDO"
+recordings = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/export-recording.csv")
 
 
 #########################
