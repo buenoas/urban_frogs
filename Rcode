@@ -507,6 +507,3 @@ frogs_env$richness_rarefied = raref_D$qD
 
 # Adiciona a cobertura de floresta para varios buffers
 frogs_env
-
-merge(x = frogs_env,
-      y = sites, by=”Species”, all.x=T, all.y=F, sort=T)
