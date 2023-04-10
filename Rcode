@@ -23,9 +23,9 @@ library(raster)
 library(iNEXT)
 
 
-#####################################
-### IMPORTA OS DADOS DAS ESPECIES ###
-#####################################
+############################################
+### IMPORTA OS DADOS BRUTOS DAS ESPECIES ###
+############################################
 
 # Adenomera andreae
 A_andreae = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/A_andreae_ALL.csv")
@@ -116,17 +116,6 @@ sort(unique(subset(frogs_raw, validated == "present")$species))
 # O nome de todas as especies esta correto, conforme a lista de Frost (2023-04-06)
 # https://amphibiansoftheworld.amnh.org/content/search?subtree=&subtree_id=&country%5B%5D=194&search_type=count
 
-# Observacao sobre alguns sitios
-# MA_11 e RPE_5_B nao entraram na playlist denominada "TUDO"
-# IT_6_B e MA_5_C tiveram zero gravacoes
-# MA_5_B, MA_5_C, RPE_5_B e IT_7_B nao possuem variaveis locais
-
-# Remove o sitio MA_5_B
-#frogs_raw = frogs_raw[-which(frogs_raw$site == "MA_5_B"), ]
-
-# Remove o sitio IT_7_B
-#frogs_raw = frogs_raw[-which(frogs_raw$site == "IT_7_B"), ]
-
 # Mantem apenas as deteccoes validadas
 frogs_validated = subset(frogs_raw, validated == "present")
 
@@ -161,10 +150,40 @@ recordings$date = NULL
 # Reordena as colunas
 recordings = recordings[, c(1, 2, 5, 4, 3, 6)]
 
+# Mantem apenas as colunas relevantes
+recordings_raref = recordings[, c("filename",
+                                  "site")]
+
+# Renomeia a coluna "filename"
+colnames(recordings_raref)[1] = "recording"
+
+# Adiciona uma especie "dummy"
+# A inclusao dessa "especie" vai permitir a construcao das matrizes de analise de rarefacao
+# A ideia eh manter o esforco amostral - i.e. todas as gravacoes de cada sitio
+# Apos a construcao das matrizes de analise de rarefacao, a especie "dummy" sera removida
+recordings_raref$species = "dummy"
+
+# Cria uma coluna em que cada linha eh um registro de ocorrencia da especie "dummy"
+recordings_raref$occurrence = 1
+
+
+############################
+### ANALISE DE RAREFACAO ###
+############################
+
+# Combina os dados das especies com os dados de esforco (gravacoes)
+data_raref = rbind(frogs_validated,
+                   recordings_raref)
+
 
 ###################################
 ### IMPORTA OS DADOS DOS SITIOS ###
 ###################################
+
+# Observacao sobre alguns sitios
+# MA_11 e RPE_5_B nao entraram na playlist denominada "TUDO"
+# IT_6_B e MA_5_C tiveram zero gravacoes
+# MA_5_B, MA_5_C, RPE_5_B e IT_7_B nao possuem variaveis locais
 
 # Sitios (conforme Arbimon)
 sites = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sites-export.csv")
