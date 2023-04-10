@@ -122,15 +122,15 @@ sort(unique(subset(frogs_raw, validated == "present")$species))
 # MA_5_B, MA_5_C, RPE_5_B e IT_7_B nao possuem variaveis locais
 
 # Remove o sitio MA_5_B
-frogs_raw = frogs_raw[-which(frogs_raw$site == "MA_5_B"), ]
+#frogs_raw = frogs_raw[-which(frogs_raw$site == "MA_5_B"), ]
 
 # Remove o sitio IT_7_B
-frogs_raw = frogs_raw[-which(frogs_raw$site == "IT_7_B"), ]
+#frogs_raw = frogs_raw[-which(frogs_raw$site == "IT_7_B"), ]
 
 
-###################################################
-### IMPORTA OS DADOS DOS SITIOS E DAS GRAVACOES ###
-###################################################
+###################################
+### IMPORTA OS DADOS DOS SITIOS ###
+###################################
 
 # Sitios (conforme Arbimon)
 sites = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sites-export.csv")
@@ -148,6 +148,11 @@ sites = sites[-which(sites$Name == "frogs"), ]
 
 # Renumera as linhas
 rownames(sites) = NULL
+
+
+######################################
+### IMPORTA OS DADOS DAS GRAVACOES ###
+######################################
 
 # Importa a lista de arquivos de gravacao da playlist "TUDO"
 recordings = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/export-recording.csv")
@@ -176,13 +181,12 @@ sites$Recordings_Playlist = effort$Freq[match(sites$Name, effort$Var1)]
 # Mantem apenas as deteccoes validadas
 frogs_validated = subset(frogs_raw, validated == "present")
 
-# Remove as deteccoes duplicadas
+# Remove as deteccoes duplicadas e mantem apenas as colunas relevantes
 # Deteccoes duplicadas sao aquelas com mais de um registro da mesma especie na mesma gravacao
 # Segundo a dissertacao do Paulo, a mesma gravacao poderia ter ate tres registros da mesma especie
+# O comando abaixo deixa apenas um registro de cada especie por gravacao
 frogs_validated = unique(frogs_validated[, c("recording",
                                              "site",
-                                             "year", "month", "day",
-                                             "hour", "minute",
                                              "species")])
 
 # Cria uma coluna em que cada linha eh um registro de ocorrencia
@@ -507,3 +511,7 @@ frogs_env$richness_rarefied = raref_D$qD
 
 # Adiciona a cobertura de floresta para varios buffers
 frogs_env
+
+merge(x = frogs_env,
+      y = sites, by = "Species",
+      all.x = TRUE, all.y = FALSE, sort = TRUE)
