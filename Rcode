@@ -116,7 +116,7 @@ sort(unique(subset(frogs_raw, validated == "present")$species))
 # O nome de todas as especies esta correto, conforme a lista de Frost (2023-04-06)
 # https://amphibiansoftheworld.amnh.org/content/search?subtree=&subtree_id=&country%5B%5D=194&search_type=count
 
-# Remove alguns sitios
+# Observacao sobre alguns sitios
 # MA_11 e RPE_5_B nao entraram na playlist denominada "TUDO"
 # IT_6_B e MA_5_C tiveram zero gravacoes
 # MA_5_B, MA_5_C, RPE_5_B e IT_7_B nao possuem variaveis locais
@@ -126,6 +126,40 @@ sort(unique(subset(frogs_raw, validated == "present")$species))
 
 # Remove o sitio IT_7_B
 #frogs_raw = frogs_raw[-which(frogs_raw$site == "IT_7_B"), ]
+
+# Mantem apenas as deteccoes validadas
+frogs_validated = subset(frogs_raw, validated == "present")
+
+# Remove as deteccoes duplicadas e mantem apenas as colunas relevantes
+# Deteccoes duplicadas sao aquelas com mais de um registro da mesma especie na mesma gravacao
+# Segundo a dissertacao do Paulo, a mesma gravacao poderia ter ate tres registros da mesma especie
+# O comando abaixo deixa apenas um registro de cada especie por gravacao
+frogs_validated = unique(frogs_validated[, c("recording",
+                                             "site",
+                                             "species")])
+
+# Cria uma coluna em que cada linha eh um registro de ocorrencia
+frogs_validated$occurrence = 1
+
+
+######################################
+### IMPORTA OS DADOS DAS GRAVACOES ###
+######################################
+
+# Importa a lista de arquivos de gravacao da playlist "TUDO"
+recordings = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/export-recording.csv")
+
+# Substitui ano com 2 digitos para ano com 4 digitos
+recordings$year = as.numeric(paste0(20, recordings$year))
+
+# Adiciona o dia Juliano
+recordings$julian_day = format(as.Date(gsub("/", "-", recordings$date)), "%j") 
+
+# Remove a coluna "date"
+recordings$date = NULL
+
+# Reordena as colunas
+recordings = recordings[, c(1, 2, 5, 4, 3, 6)]
 
 
 ###################################
@@ -149,26 +183,6 @@ sites = sites[-which(sites$Name == "frogs"), ]
 # Renumera as linhas
 rownames(sites) = NULL
 
-
-######################################
-### IMPORTA OS DADOS DAS GRAVACOES ###
-######################################
-
-# Importa a lista de arquivos de gravacao da playlist "TUDO"
-recordings = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/export-recording.csv")
-
-# Substitui ano com 2 digitos para ano com 4 digitos
-recordings$year = as.numeric(paste0(20, recordings$year))
-
-# Adiciona o dia Juliano
-recordings$julian_day = format(as.Date(gsub("/", "-", recordings$date)), "%j") 
-
-# Remove a coluna "date"
-recordings$date = NULL
-
-# Reordena as colunas
-recordings = recordings[, c(1, 2, 5, 4, 3, 6)]
-
 # Adiciona o esforco amostral (i.e. numeros de gravacoes) por sitio
 effort = data.frame(table(recordings$site))
 sites$Recordings_Playlist = effort$Freq[match(sites$Name, effort$Var1)]
@@ -177,20 +191,6 @@ sites$Recordings_Playlist = effort$Freq[match(sites$Name, effort$Var1)]
 #########################
 ### ANALISE DOS DADOS ###
 #########################
-
-# Mantem apenas as deteccoes validadas
-frogs_validated = subset(frogs_raw, validated == "present")
-
-# Remove as deteccoes duplicadas e mantem apenas as colunas relevantes
-# Deteccoes duplicadas sao aquelas com mais de um registro da mesma especie na mesma gravacao
-# Segundo a dissertacao do Paulo, a mesma gravacao poderia ter ate tres registros da mesma especie
-# O comando abaixo deixa apenas um registro de cada especie por gravacao
-frogs_validated = unique(frogs_validated[, c("recording",
-                                             "site",
-                                             "species")])
-
-# Cria uma coluna em que cada linha eh um registro de ocorrencia
-frogs_validated$occurrence = 1
 
 # Cria uma matriz de abundancia de sitios x especies
 df_ab = as.data.frame(
