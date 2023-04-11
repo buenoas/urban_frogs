@@ -153,7 +153,6 @@ recordings = recordings[, c(1, 2, 5, 4, 3, 6)]
 # Mantem apenas as colunas relevantes
 recordings_raref = recordings[, c("filename",
                                   "site")]
-
 # Renomeia a coluna "filename"
 colnames(recordings_raref)[1] = "recording"
 
@@ -174,6 +173,52 @@ recordings_raref$occurrence = 1
 # Combina os dados das especies com os dados de esforco (gravacoes)
 data_raref = rbind(frogs_validated,
                    recordings_raref)
+
+# Determina a relacao de sitios para analisar
+sitios_raref = sort(unique(data_raref$site))
+
+# Cria uma matriz de incidencia de especie por gravacao para cada sitio
+raref_list = list()
+
+for (i in 1:length(sitios_raref)) {
+  
+  # Seleciona apenas um dos sitios
+  raref_site = subset(data_raref, site == sitios_raref[i])
+  
+  # Cria uma matriz de incidencia de especies por gravacao
+  raref_df = as.data.frame(tapply(raref_site$occurrence,
+                                  list(raref_site$species, raref_site$recording),
+                                  sum))
+  
+  # Converte NA em zero
+  raref_df[is.na(raref_df)] = 0
+  
+  # Remove a especie dummy
+  raref_df = raref_df[-which(rownames(raref_df) == "dummy"), ]
+  
+  raref_list[[i]] = raref_df
+  
+  print(i)
+  
+}
+
+# Da nome aos sitios da lista
+names(raref_list) = sitios_raref
+
+# Remove os sitios com zero especies da lista
+raref_list = raref_list[-which(unlist(lapply(raref_list, nrow)) == 0)]
+
+# Realiza as analises de rarefacao padronizadas por amostras (numero de gravacoes)
+# O numero de gravacoes utilizado foi o dobro (2198) do sitio (MC_2_B) com o menor numero de gravacoes (1099)
+raref_D = estimateD(raref_list,
+                    q = 0,
+                    datatype = "incidence_raw",
+                    base = "size",
+                    level = NULL,
+                    nboot = 1000,
+                    conf = 0.95)
+
+raref_D$Richness.observed = unlist(lapply(raref_list, nrow))
 
 
 ###################################
@@ -470,54 +515,6 @@ colnames(landcover_buffers) = paste0("Forest_cover_",
 # Adiciona o valores de cobertura florestal ao objeto "sites"
 sites = cbind(sites, landcover_buffers)
 
-
-#############################
-### ANALISES DE RAREFACAO ###
-#############################
-
-# Prepara os dados
-recordings$species = "dummy"
-colnames(recordings)[1] = "recording"
-
-# Combina validacoes com gravacoes
-raref = rbind(frogs_validated[, c("recording", "site", "species")],
-              recordings[, c("recording", "site", "species")])
-
-raref$occurrence = 1
-
-# Cria uma matriz de incidencia de especie por gravacao para cada sitio
-raref_list = list()
-
-for (i in 1:nrow(df_ab)) {
-  
-  # Seleciona apenas um dos sitios
-  raref_site = subset(raref, site == rownames(df_ab)[i])
-  
-  # Cria uma matriz de incidencia de especies por gravacao
-  raref_df = as.data.frame(tapply(raref_site$occurrence,
-                                  list(raref_site$species, raref_site$recording),
-                                  sum))
-  
-  # Converte NA em zero
-  raref_df[is.na(raref_df)] = 0
-  
-  # Remove a especie dummy
-  raref_df = raref_df[-which(rownames(raref_df) == "dummy"), ]
-  
-  raref_list[[i]] = raref_df
-  
-  print(i)
-  
-}
-
-# Realiza as analises de rarefacao
-raref_D = estimateD(raref_list,
-                    q = 0,
-                    datatype = "incidence_raw",
-                    base = "size",
-                    level = NULL,
-                    nboot = 1000,
-                    conf = 0.95)
 
 # Cria uma matriz com variaveis resposta e preditoras
 frogs_env = df_ab
