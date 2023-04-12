@@ -12,6 +12,9 @@ remove(list = ls())
 # Desabilita a notacao cientifica
 options(scipen = 999)
 
+# Garante a obtencao dos mesmos resultados toda vez que o codigo for rodado
+set.seed(2092270023) # valor obtido com o comando "sample(.Machine$integer.max, 1)"
+
 # Carrega os pacotes
 library(vegan)
 library(stringr)
@@ -116,6 +119,10 @@ sort(unique(subset(frogs_raw, validated == "present")$species))
 # O nome de todas as especies esta correto, conforme a lista de Frost (2023-04-06)
 # https://amphibiansoftheworld.amnh.org/content/search?subtree=&subtree_id=&country%5B%5D=194&search_type=count
 
+# Cria uma coluna em que cada linha eh um registro de ocorrencia
+frogs_raw$occurrence = 1
+frogs_raw$occurrence[frogs_raw$validated != "present"] = 0
+
 # Mantem apenas as deteccoes validadas
 frogs_validated = subset(frogs_raw, validated == "present")
 
@@ -166,9 +173,9 @@ recordings_raref$species = "dummy"
 recordings_raref$occurrence = 1
 
 
-############################
-### ANALISE DE RAREFACAO ###
-############################
+###############################################
+### RIQUEZA RAREFEITA DE ESPECIES POR SITIO ###
+###############################################
 
 # Combina os dados das especies com os dados de esforco (gravacoes)
 data_raref = rbind(frogs_validated,
@@ -218,8 +225,6 @@ raref_D = estimateD(raref_list,
                     nboot = 1000,
                     conf = 0.95)
 
-raref_D$Richness.observed = unlist(lapply(raref_list, nrow))
-
 
 ###################################
 ### IMPORTA OS DADOS DOS SITIOS ###
@@ -250,6 +255,93 @@ rownames(sites) = NULL
 # Adiciona o esforco amostral (i.e. numeros de gravacoes) por sitio
 effort = data.frame(table(recordings$site))
 sites$Recordings_Playlist = effort$Freq[match(sites$Name, effort$Var1)]
+
+# Constroi a matriz de sitios por especies
+comm = as.data.frame(tapply(frogs_raw$occurrence,
+                            list(frogs_raw$site, frogs_raw$species),
+                            sum))
+
+# Transforma NA em zero
+comm[is.na(comm)] = 0
+
+# Transforma a matriz em presenca-ausencia
+comm = ifelse(comm > 0, 1, 0)
+
+# Calcula a riqueza observada de especies por sitios
+richness = rowSums(comm)
+
+# Adiciona a riqueza de observada de especies ao objeto "sites"
+sites$Richness_observed = richness[match(sites$Name,
+                                         names(richness))]
+
+# Adiciona a riqueza rarefeita de especies
+sites$Richness_raref = raref_D$qD[match(sites$Name,
+                                        raref_D$Assemblage)]
+
+
+##########################
+### ANALISES ESPACIAIS ###
+##########################
+
+# Importa o raster da regiao de estudo
+# A regiao de estudo abrange os seis municipios amostrados da Regiao Metropolitana de Manaus
+# O raster do MapBiomas corresponde a colecao 7, ano 2020
+mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
+
+# Transforma as coordenadas dos sitios em um shapefile de pontos
+sites_shp = SpatialPointsDataFrame(coords = sites[, 4:3], # 4 = Longitude, 3 = Latitude
+                                   data = sites,
+                                   proj4string = mapbiomas@crs)
+
+# Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
+source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
+
+# Calcular a cobertura de floresta para varios tamanhos de buffer
+# "3" = floresta
+landcover_buffers = list(
+  landcover(mapbiomas, sites_shp, 50)[, "3"],
+  landcover(mapbiomas, sites_shp, 100)[, "3"],
+  landcover(mapbiomas, sites_shp, 150)[, "3"],
+  landcover(mapbiomas, sites_shp, 200)[, "3"],
+  landcover(mapbiomas, sites_shp, 250)[, "3"],
+  landcover(mapbiomas, sites_shp, 300)[, "3"],
+  landcover(mapbiomas, sites_shp, 350)[, "3"],
+  landcover(mapbiomas, sites_shp, 400)[, "3"],
+  landcover(mapbiomas, sites_shp, 450)[, "3"],
+  landcover(mapbiomas, sites_shp, 500)[, "3"],
+  landcover(mapbiomas, sites_shp, 550)[, "3"],
+  landcover(mapbiomas, sites_shp, 600)[, "3"],
+  landcover(mapbiomas, sites_shp, 650)[, "3"],
+  landcover(mapbiomas, sites_shp, 700)[, "3"],
+  landcover(mapbiomas, sites_shp, 750)[, "3"],
+  landcover(mapbiomas, sites_shp, 800)[, "3"],
+  landcover(mapbiomas, sites_shp, 850)[, "3"],
+  landcover(mapbiomas, sites_shp, 900)[, "3"],
+  landcover(mapbiomas, sites_shp, 950)[, "3"],
+  landcover(mapbiomas, sites_shp, 1000)[, "3"])
+
+# Coloca os valores de cobertura de floresta lado a lado
+landcover_buffers = do.call(cbind, landcover_buffers)
+
+# Renomeia as colunas
+colnames(landcover_buffers) = paste0("Forest_cover_",
+                                     seq(50, 1000, 50),
+                                     "_m")
+
+# Adiciona o valores de cobertura florestal ao objeto "sites"
+sites = cbind(sites, landcover_buffers)
+
+# Cria uma matriz com variaveis resposta e preditoras
+frogs_env = df_ab
+
+# Adiciona a riqueza observada de especies
+frogs_env$richness_observed = specnumber(df_ab)
+
+# Adiciona a riqueza rarefeita de especies (padronizada para 2198 gravacoes)
+frogs_env$richness_rarefied = raref_D$qD
+
+# Adiciona a cobertura de floresta para varios buffers
+frogs_env
 
 
 #########################
@@ -463,71 +555,22 @@ for (i in 1:ncol(freq_hour_prop)) {
 }
 
 
-##########################
-### ANALISES ESPACIAIS ###
-##########################
+# Pearson's product-moment correlation between number of species and habitat amount
+# across 40 landscape scales
+sites_ = sites[, c(9:30)]
+sites_ = sites_[-which(is.na(sites_$Richness_observed)), ]
 
-# Importa o raster da regiao de estudo
-# A regiao de estudo abrange os seis municipios amostrados da Regiao Metropolitana de Manaus
-# O raster do MapBiomas corresponde a colecao 7, ano 2020
-mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
+buffer = apply(sites_[, 3:ncol(sites_)], 2, function(z)
+  cor.test(z, sites_$Richness_observed))
 
-# Transforma as coordenadas dos sitios em um shapefile de pontos
-sites_shp = SpatialPointsDataFrame(coords = sites[, 4:3], # 4 = Longitude, 3 = Latitude
-                                   data = sites,
-                                   proj4string = mapbiomas@crs)
+# Convert the results stored as a 'list' object into a 'matrix' object
+buffer = do.call(rbind, lapply(buffer, function(z) z[4]))
 
-# Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
-source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
+# Save the results in a 'data frame' object
+buffer = data.frame(buffer = seq(50, 1000, 50), r = as.numeric(buffer))
 
-# Calcular a cobertura de floresta para varios tamanhos de buffer
-# "3" = floresta
-landcover_buffers = list(
-  landcover(mapbiomas, sites_shp, 50)[, "3"],
-  landcover(mapbiomas, sites_shp, 100)[, "3"],
-  landcover(mapbiomas, sites_shp, 150)[, "3"],
-  landcover(mapbiomas, sites_shp, 200)[, "3"],
-  landcover(mapbiomas, sites_shp, 250)[, "3"],
-  landcover(mapbiomas, sites_shp, 300)[, "3"],
-  landcover(mapbiomas, sites_shp, 350)[, "3"],
-  landcover(mapbiomas, sites_shp, 400)[, "3"],
-  landcover(mapbiomas, sites_shp, 450)[, "3"],
-  landcover(mapbiomas, sites_shp, 500)[, "3"],
-  landcover(mapbiomas, sites_shp, 550)[, "3"],
-  landcover(mapbiomas, sites_shp, 600)[, "3"],
-  landcover(mapbiomas, sites_shp, 650)[, "3"],
-  landcover(mapbiomas, sites_shp, 700)[, "3"],
-  landcover(mapbiomas, sites_shp, 750)[, "3"],
-  landcover(mapbiomas, sites_shp, 800)[, "3"],
-  landcover(mapbiomas, sites_shp, 850)[, "3"],
-  landcover(mapbiomas, sites_shp, 900)[, "3"],
-  landcover(mapbiomas, sites_shp, 950)[, "3"],
-  landcover(mapbiomas, sites_shp, 1000)[, "3"])
+# Scale of effect: 200-m buffer around mist-net lines
+buffer[order(-buffer$r), ][1, ]
 
-# Coloca os valores de cobertura de floresta lado a lado
-landcover_buffers = do.call(cbind, landcover_buffers)
-
-# Renomeia as colunas
-colnames(landcover_buffers) = paste0("Forest_cover_",
-                                     seq(50, 1000, 50),
-                                     "_m")
-
-# Adiciona o valores de cobertura florestal ao objeto "sites"
-sites = cbind(sites, landcover_buffers)
-
-
-# Cria uma matriz com variaveis resposta e preditoras
-frogs_env = df_ab
-
-# Adiciona a riqueza observada de especies
-frogs_env$richness_observed = specnumber(df_ab)
-
-# Adiciona a riqueza rarefeita de especies (padronizada para 2198 gravacoes)
-frogs_env$richness_rarefied = raref_D$qD
-
-# Adiciona a cobertura de floresta para varios buffers
-frogs_env
-
-merge(x = frogs_env,
-      y = sites, by = "Species",
-      all.x = TRUE, all.y = FALSE, sort = TRUE)
+plot(buffer[order(-buffer$r), ]$buffer, buffer[order(-buffer$r), ]$r, pch=16, cex=1.2,ylab = "Pearson correlation coefficient", xlab = "Landscape size (m)", main = "Scale of effect")
+abline(v = buffer[order(-buffer$r), ][1, ])
