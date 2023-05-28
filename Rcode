@@ -645,3 +645,86 @@ buffer[order(-buffer$r), ][1, ]
 
 plot(buffer[order(-buffer$r), ]$buffer, buffer[order(-buffer$r), ]$r, pch=16, cex=1.2,ylab = "Pearson correlation coefficient", xlab = "Landscape size (m)", main = "Scale of effect")
 abline(v = buffer[order(-buffer$r), ][1, ])
+
+
+
+###############################
+### NESTEDNESS PLOT ###########
+### MAXIMALLY PACKED MATRIX ###
+###############################
+
+library(reshape2)
+library(ggplot2)
+
+# Cria a matriz de incidencia de sitios por especies
+x =
+  as.data.frame(
+    tapply(frogs_validated$occurrence,
+           list(frogs_validated$site,
+                frogs_validated$species),
+           sum))
+
+# Converte NA em zero
+x[is.na(x)] = 0
+
+# Rows are sites
+# Columns are species
+# Sort rows by richness followed by abundance
+# Sort columns by incidence followed by abundance
+x.sort =
+  x[order(-rowSums(ifelse(x > 0, 1, 0)),
+          -rowSums(x)),
+    order(colSums(ifelse(x > 0, 1, 0)),
+          colSums(x))]
+
+# Adiciona uma coluna com o nome dos sitios
+x.sort$site = rownames(x.sort)
+
+# Converte a matrix para o formato de tabela longa
+x.melt = melt(x.sort)
+
+# Ordena os sitios
+x.melt$site = factor(x.melt$site,
+                     levels = unique(x.melt$site))
+
+# Converte os valores de abundancia em incidencia
+x.melt$incidence = ifelse(x.melt$value > 0, 1, 0)
+
+# Produz o grafico
+p = 
+  
+  ggplot(data = x.melt,
+         aes(x = site, y = variable, fill = incidence)) +
+  
+  #labs(x = "Sites by species richness",
+  #     y = "Species by site incidence") +
+  labs(x = NULL,
+       y = NULL,
+       title = "Maximally packed matrix for diurnal frogs") +
+  
+  geom_tile(color = "white",
+            linewidth = 0.5,
+            linetype = 1) +
+  
+  scale_fill_gradient(low = "grey90", high = "#006400") +
+  
+  theme_classic(base_size = 10) +
+  theme(axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(colour = "black",
+                                   angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.5,
+                                   size = 6),
+        axis.text.y = element_text(colour = "black",
+                                   face = "italic",
+                                   size = 7),
+        legend.position = "none",
+        plot.title = element_text(hjust = 0.5))
+
+# Visualiza o gráfico
+p
+
+# Salva o gráfico
+ggsave(p, filename = "nested_frogs.pdf",
+       width = 183, height = 89, units = "mm")
