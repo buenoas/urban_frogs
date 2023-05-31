@@ -728,3 +728,431 @@ p
 # Salva o gráfico
 ggsave(p, filename = "nested_frogs.pdf",
        width = 183, height = 89, units = "mm")
+
+
+
+
+
+
+
+###############################
+### NESTEDNESS PLOT ###########
+### MAXIMALLY PACKED MATRIX ###
+###############################
+
+library(reshape2)
+library(ggplot2)
+library(stringr)
+library(vegan)
+library(rphylopic)
+
+# Cria a matriz de incidencia de sitios por especies
+x =
+  as.data.frame(
+    tapply(frogs_validated$occurrence,
+           list(frogs_validated$site,
+                frogs_validated$species),
+           sum))
+
+# Converte NA em zero
+x[is.na(x)] = 0
+
+# Rows are sites
+# Columns are species
+# Sort rows by richness followed by abundance
+# Sort columns by incidence followed by abundance
+x.sort =
+  x[order(-rowSums(ifelse(x > 0, 1, 0)),
+          -rowSums(x)),
+    order(colSums(ifelse(x > 0, 1, 0)),
+          colSums(x))]
+
+# Adiciona uma coluna com o nome dos sitios
+x.sort$site = rownames(x.sort)
+
+# Converte a matrix para o formato de tabela longa
+x.melt = melt(x.sort)
+
+# Ordena os sitios
+x.melt$site = factor(x.melt$site,
+                     levels = unique(x.melt$site))
+
+# Converte os valores de abundancia em incidencia
+x.melt$incidence = ifelse(x.melt$value > 0, 1, 0)
+
+# Produz o grafico
+p = 
+  
+  ggplot(data = x.melt,
+         aes(x = site, y = variable, fill = incidence)) +
+  
+  #labs(x = "Sites by species richness",
+  #     y = "Species by site incidence") +
+  labs(x = NULL,
+       y = NULL,
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Distribuição de sapos diurnos em 28 sítios de amostragem em 6 municípios") +
+  
+  geom_tile(color = "white",
+            linewidth = 0.5,
+            linetype = 1) +
+  
+  scale_fill_gradient(low = "grey90", high = "#499B75") +
+  
+  theme_classic(base_size = 10) +
+  theme(axis.line = element_blank(),
+        axis.ticks = element_blank(),
+        axis.text.x = element_text(colour = "black",
+                                   angle = 90,
+                                   hjust = 1,
+                                   vjust = 0.5,
+                                   size = 6),
+        axis.text.y = element_text(colour = "black",
+                                   face = "italic",
+                                   size = 7),
+        legend.position = "none",
+        plot.title = element_text(colour = "#D9534F"))
+
+p
+
+ggsave(p, filename = "nested_frogs.jpg",  dpi = 900,
+       width = 183, height = 89, units = "mm")
+
+
+# Barplot com riqueza
+sapos.ab = x
+
+sapos.pa = ifelse(sapos.ab > 0, 1, 0)
+aggregate(sapos.pa, list(cities), sum)
+
+
+richness = data.frame(s = specnumber(z),
+                      cities = word(rownames(z), 1, sep = "_"))
+
+richness$cities = factor(richness$cities,
+                         levels = c("RPE", "IT", "MA",
+                                    "MC", "PF", "IR"))
+
+# OBTEM A IMAGEM DE UM MORCEGO
+uuid <- get_uuid(name = "Litoria infrafrenata")
+img <- get_phylopic(uuid = uuid)
+
+p =
+  ggplot(data = richness,
+         aes(x = cities, y = s)) +
+  
+  add_phylopic(img = img, color = "#499B75",
+               x = 5.8, y = 8.5, ysize = 1.5) +
+  
+  labs(x = NULL, y = "Número de sapos diurnos",
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Sapos diurnos na Região Metropolitana de Manaus") +
+  scale_y_continuous(breaks = seq(1, 9, 2)) +
+  scale_x_discrete(labels = c("Rio Preto\nda Eva",
+                              "Itacoatiara",
+                              "Manaus", "Manacapuru",
+                              "Presidente\nFigueiredo",
+                              "Iranduba")) +
+  geom_boxplot(outlier.shape = NA,
+               width = 0.7, fill = "#C59A6D", alpha = 1/3) +
+  geom_jitter(width = 0.2,
+              height = 0,
+              shape = 21, size = 3, alpha = 2/3,
+              colour = "black", fill = "#499B75") + 
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F"))
+
+ggsave(p, filename = "riqueza_por_cidade.jpg", dpi = 600,
+       width = 15, height = 12, units = "cm")
+
+
+# Richness per city
+agg = aggregate(x, list(cities), sum)
+s.city = data.frame(s = specnumber(agg[, -1]),
+                    city = agg[, 1])
+
+s.city$city = factor(s.city$city,
+                     levels = s.city[order(-s.city$s), "city"])
+
+
+g = 
+  
+  ggplot(s.city,
+         aes(x = city, y = s, label = s)) +
+  
+  labs(x = NULL, y = "Número de sapos diurnos",
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Total de espécies de sapos diurnos por município") +
+  
+  scale_x_discrete(labels = c("Rio Preto\nda Eva",
+                              "Manaus",
+                              "Itacoatiara", "Manacapuru",
+                              "Presidente\nFigueiredo",
+                              "Iranduba")) +
+  
+  geom_col(width = 0.8,
+           fill = "#499B75") +
+  geom_text(vjust = 2, colour = "white", size = 6) +
+  
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "white"),
+        axis.text.x = element_text(colour = "black"),
+        axis.text.y = element_text(colour = "white"),
+        axis.ticks = element_blank(),
+        axis.line = element_blank(),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F"))
+
+g
+
+ggsave(g, filename = "riqueza_total_por_cidade.jpg", dpi = 600,
+       width = 15, height = 12, units = "cm")
+
+
+# Ocorrencia nos sitios
+occ = sort(specnumber(t(x)), decreasing = TRUE)
+
+y = t(x)
+rownames(y[order(specnumber(y),
+                 rowSums(y)), ])
+
+
+occ = data.frame(species = names(occ),
+                 occ = occ)
+rownames(occ) = NULL
+occ$species = factor(occ$species,
+                     levels = rownames(y[order(specnumber(y),
+                                               rowSums(y)), ]))
+
+gg_occ = 
+  
+  ggplot(data = occ,
+         aes(x = occ, y = species, label = occ)) +
+  
+  labs(x = NULL,
+       y = NULL,
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Número de sítios de amostragem com registro das espécies") +
+  
+  geom_col(width = 0.8,
+           fill = "#499B75") +
+  geom_text(hjust = 1.5, colour = "white", size = 4) +
+  
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text.x = element_blank(),
+        axis.text.y = element_text(colour = "black",
+                                   face = "italic"),
+        axis.ticks = element_blank(),
+        axis.line = element_blank(),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F"))
+
+# Visualiza o grafico
+gg_occ
+
+ggsave(gg_occ, filename = "frequencia_especies.jpg", dpi = 600,
+       width = 18, height = 12, units = "cm")
+
+
+
+
+# Variaveis locais
+loc = read.csv("C:\\Users\\Anderson\\Downloads\\Variaveis ambientais tabela consolidada.xlsx - Sheet1.csv")
+
+
+z=tapply(frogs_raw$occurrence, list(frogs_raw$site, frogs_raw$species), max)
+z[is.na(z)] = 0
+
+
+loc.rich = data.frame(richness = specnumber(z))
+
+loc$rich = loc.rich$richness[match(loc$Point.ID,
+                                   rownames(loc.rich))]
+
+loc = na.omit(loc)
+
+# Fechamento do dossel
+a = 
+  ggplot(data = loc[order(loc$canopy_cover,
+                          loc$rich), ],
+         aes(x = canopy_cover, y = rich)) + 
+  
+  labs(x = "Fechamento do dossel (%)", y = "Número de sapos diurnos",
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Efeito do ambiente sobre o número de sapos diurnos") +
+  scale_y_continuous(breaks = seq(1, 9, 2)) +
+  geom_smooth(method = "lm", colour = "#D9534F",
+              fill = "#C59A6D", alpha = 1/3) +
+  geom_point(shape = 21, size = 3, alpha = 2/3,
+             colour = "black", fill = "#499B75") + 
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F"))
+
+ggsave(a, filename = "dossel.jpg", dpi = 600,
+       width = 15, height = 12, units = "cm")
+
+
+# Profundidade da serrapilheira
+b = ggplot(data = loc[order(loc$litter._cm,
+                            loc$rich), ],
+           aes(x = litter._cm, y = rich)) + 
+  
+  labs(x = "Profundidade da serrapilheira (cm)",
+       y = "Número de sapos diurnos",
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Efeito do ambiente sobre o número de sapos diurnos") +
+  scale_y_continuous(breaks = seq(1, 9, 2)) +
+  scale_x_continuous(breaks = seq(1, 7, 1)) +
+  
+  geom_smooth(method = "lm", colour = "#D9534F",
+              fill = "#C59A6D", alpha = 1/3) +
+  geom_point(shape = 21, size = 3, alpha = 2/3,
+             colour = "black", fill = "#499B75") + 
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F"))
+
+ggsave(b, filename = "serrapilheira.jpg", dpi = 600,
+       width = 15, height = 12, units = "cm")
+
+
+# Troncos caídos
+c = ggplot(data = loc[order(loc$logs,
+                            loc$rich), ],
+           aes(x = logs, y = rich)) + 
+  
+  labs(x = "Número de troncos caídos",
+       y = "Número de sapos diurnos",
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Efeito do ambiente sobre o número de sapos diurnos") +
+  scale_y_continuous(breaks = seq(1, 9, 2)) +
+  scale_x_continuous(breaks = seq(0, 14, 2)) +
+  
+  geom_smooth(method = "lm", colour = "#D9534F",
+              fill = "#C59A6D", alpha = 1/3) +
+  geom_point(shape = 21, size = 3, alpha = 2/3,
+             colour = "black", fill = "#499B75") + 
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F"))
+
+ggsave(c, filename = "troncos.jpg", dpi = 600,
+       width = 15, height = 12, units = "cm")
+
+
+# Forest cover within the local landscape
+sites$rich = specnumber(z)[match(sites$Name, rownames(z))]
+sites = na.omit(sites)
+
+cbind(r = sort(apply(sites[, 8:27], 2, function(x) cor.test(x, sites$rich))))
+
+# Cobertura de floresta
+d = ggplot(data = sites[order(sites$Forest_cover_300_m,
+                              sites$rich), ],
+           aes(x = Forest_cover_300_m, y = rich)) + 
+  
+  labs(y = "Número de sapos diurnos",
+       x = "Cobertura de floresta em 300 m de raio (%)",
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Efeito do ambiente sobre o número de sapos diurnos") +
+  scale_y_continuous(breaks = seq(1, 9, 2)) +
+  geom_smooth(method = "lm", colour = "#D9534F",
+              fill = "#C59A6D", alpha = 1/3) +
+  geom_point(shape = 21, size = 3, alpha = 2/3,
+             colour = "black", fill = "#499B75") + 
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F"))
+
+ggsave(d, filename = "forest_cover.jpg", dpi = 600,
+       width = 15, height = 12, units = "cm")
+
+
+
+nmds = metaMDS(z[rowSums(z) > 0, ])
+nmds
+
+# Extrai os valores dos 2 primeiros eixos da PCoA
+positions = as.data.frame(nmds$points)
+
+# Renomeia as colunas
+colnames(positions) = c("NMDS1", "NMDS2")
+
+# Adiciona o codigo do municipio
+positions$city_code = word(rownames(positions), 1, sep = "_")
+
+# Adiciona o nome do municipio
+positions$city_name = positions$city_code
+positions$city_name[positions$city_name == "IR"] = "Iranduba"
+positions$city_name[positions$city_name == "IT"] = "Itacoatiara"
+positions$city_name[positions$city_name == "MC"] = "Manacapuru"
+positions$city_name[positions$city_name == "MA"] = "Manaus"
+positions$city_name[positions$city_name == "PF"] = "Presidente Figueiredo"
+positions$city_name[positions$city_name == "RPE"] = "Rio Preto da Eva"
+
+# Poligonos do grafico
+find_hull = function(positions) positions[chull(positions$NMDS1, positions$NMDS2), ]
+hulls = ddply(positions, "city_name", find_hull)
+
+# Produz o grafico com os 2 primeiros eixos da PCoA
+gg_pcoa = 
+  
+  ggplot(data = positions[order(positions$NMDS1,
+                                positions$NMDS2), ],
+         aes(x = NMDS1, y = NMDS2,
+             colour = city_name, fill = city_name)) + 
+  
+  labs(x = "NMDS eixo 1",
+       y = paste0("NMDS eixo 2"),
+       colour = NULL,
+       fill = NULL,
+       title = "Biodiversidade nas Cidades",
+       subtitle = "Composição de espécies de sapos diurnos") +
+  
+  scale_colour_brewer(type = "qual", palette = "Set1") +
+  scale_fill_brewer(type = "qual", palette = "Set1") +
+  
+  geom_polygon(data = hulls, aes(colour = NULL),
+               alpha = 0.2, show.legend = FALSE) +
+  
+  geom_point(size = 3, shape = 21, colour = "black", alpha = 0.6) +
+  
+  theme_classic(base_size = 12) +
+  theme(axis.title = element_text(colour = "black"),
+        axis.text = element_text(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.line = element_line(colour = "black"),
+        legend.position = "bottom",
+        plot.title = element_text(colour = "#D9534F")) +
+  annotate("text",
+           x = min(positions$NMDS1), hjust = 0, vjust = -0.5,
+           y = min(positions$NMDS2), label = "Stress: 0.105")
+
+# Visualiza o grafico
+gg_pcoa
+
+ggsave(gg_pcoa, filename = "nmds.jpg", dpi = 600,
+       width = 15, height = 15, units = "cm")
