@@ -384,11 +384,11 @@ dossel$Name = consolidada$`Point ID`[match(dossel$Site_Number,
 # Merge a tabela sites do Arbimon com as variaveis locais
 # Troncos e serrapilheira
 sites_var = merge(x = sites, y = troncos, by = "Name",
-                  all.x = TRUE, all.y = FALSE, sort = FALSE)
+                  all.x = TRUE, all.y = FALSE, sort = TRUE)
 
 # Cobertura e fechamento do dossel
 sites_var = merge(x = sites_var, y = dossel, by = "Site_Number",
-                  all.x = TRUE, all.y = FALSE, sort = FALSE)
+                  all.x = TRUE, all.y = FALSE, sort = TRUE)
 
 
 # Adiciona uma coluna com o codigo da cidade
@@ -417,6 +417,9 @@ sites_var$Site_Name = stri_trans_general(sites_var$Site_Name,
                                          "Latin-ASCII")
 sites_var$Site_Name = gsub(" ", "_", sites_var$Site_Name)
 sites_var$Site_Name = gsub("/", "_", sites_var$Site_Name)
+
+# Substitui "/" por "_" na coluna timezone
+sites_var$timezone = gsub("/", "_", sites_var$timezone)
 
 # Padroniza o nome das colunas
 sites_var = clean_names(sites_var)
@@ -531,7 +534,7 @@ comm_validated$site_code = rownames(comm_validated)
 # Junta variaveis locais e de paisagem
 # com dados de composicao de especies
 sites_var_comm = merge(x = sites_var, y = comm_validated, by = "site_code",
-                       all.x = TRUE, all.y = FALSE, sort = FALSE)
+                       all.x = TRUE, all.y = FALSE, sort = TRUE)
 
 # Adiciona as espescies detectadas pelo algoritmo,
 # mas com zero validacoes humanas (falto-positivos)
@@ -543,6 +546,12 @@ sites_var_comm$Elachistocleis_bicolor = 0
 
 # Adiciona a especie que nao foi detectada pelo algoritmo
 sites_var_comm$Ameerega_hahneli = NA
+
+write.csv(sites_var_comm, "sites_var_comm.csv", row.names = FALSE)
+
+
+
+
 
 
 
