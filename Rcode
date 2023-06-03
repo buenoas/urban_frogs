@@ -382,11 +382,20 @@ dossel$Name = consolidada$`Point ID`[match(dossel$Site_Number,
 ######################
 
 # Merge a tabela sites do Arbimon com as variaveis locais
+# Troncos e serrapilheira
 sites_var = merge(x = sites, y = troncos, by = "Name",
                   all.x = TRUE, all.y = FALSE, sort = FALSE)
 
+# Cobertura e fechamento do dossel
+sites_var = merge(x = sites_var, y = dossel, by = "Site_Number",
+                  all.x = TRUE, all.y = FALSE, sort = FALSE)
+
+
 # Adiciona uma coluna com o codigo da cidade
-sites_var$City_Code = word(sites_var$Name, 1, sep = "_")
+sites_var$City_Code = word(sites_var$Name.x, 1, sep = "_")
+
+# Remove a coluna Name.y
+sites_var$Name.y = NULL
 
 # Adiciona uma coluna com o nome da cidade
 sites_var$City_Name = "Iranduba"
@@ -397,7 +406,7 @@ sites_var$City_Name[sites_var$City_Code == "PF"] = "Presidente_Figueiredo"
 sites_var$City_Name[sites_var$City_Code == "RPE"] = "Rio_Preto_da_Eva"
 
 # Renomeia o nome da coluna Name para Site_Code
-colnames(sites_var)[colnames(sites_var) == "Name"] = "Site_Code"
+colnames(sites_var)[colnames(sites_var) == "Name.x"] = "Site_Code"
 
 # Renomeia o nome da coluna Name para Id
 colnames(sites_var)[colnames(sites_var) == "Id"] = "Site_Id_Arbimon"
@@ -413,7 +422,42 @@ sites_var$Site_Name = gsub("/", "_", sites_var$Site_Name)
 sites_var = clean_names(sites_var)
 
 # Ordena as colunas
-sites_var = sites_var[, c(26, 25, 11, 12, 1, 2, 4, 3, 5, 6, 7:10, 13:24)]
+sites_var = sites_var[, c("city_name",
+                          "city_code",
+                          "site_number",
+                          "site_name",
+                          "site_code",
+                          "site_id_arbimon",
+                          "longitude",
+                          "latitude",
+                          "altitude",
+                          "timezone",
+                          "recordings_count",
+                          "recordings_playlist",
+                          "richness_observed",
+                          "richness_rarefied",
+                          "logs_0_50_m",
+                          "logs_50_100_m",
+                          "logs_100_150_m",
+                          "logs_150_200_m",
+                          "logs_200_250_m",
+                          "logs_250_300_m",
+                          "litter_cm_0_50_m",
+                          "litter_cm_50_100_m",
+                          "litter_cm_100_150_m",
+                          "litter_cm_150_200_m",
+                          "litter_cm_200_250_m",
+                          "litter_cm_250_300_m",
+                          "canopy_cover_50_m",
+                          "canopy_cover_100_m",
+                          "canopy_cover_150_m",
+                          "canopy_cover_200_m",
+                          "canopy_cover_250_m",
+                          "canopy_closure_50_m",
+                          "canopy_closure_100_m",
+                          "canopy_closure_150_m",
+                          "canopy_closure_200_m",
+                          "canopy_closure_250_m")]
 
 
 ##########################
@@ -430,8 +474,8 @@ mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/s
 values(mapbiomas) = ifelse(values(mapbiomas) == 3, 1, 0)
 
 # Transforma as coordenadas dos sitios em um shapefile de pontos
-sites_shp = SpatialPointsDataFrame(coords = sites[, 4:3], # 4 = Longitude, 3 = Latitude
-                                   data = sites,
+sites_shp = SpatialPointsDataFrame(coords = sites_var[, c("longitude", "latitude")],
+                                   data = sites_var,
                                    proj4string = mapbiomas@crs)
 
 # Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
@@ -440,25 +484,14 @@ source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
 # Calcular a cobertura de floresta para varios tamanhos de buffer
 # "3" = floresta
 landcover_buffers = list(
-  landcover(mapbiomas, sites_shp, 50)[, "1"], # 1 = floresta
-  landcover(mapbiomas, sites_shp, 100)[, "1"],
-  landcover(mapbiomas, sites_shp, 150)[, "1"],
-  landcover(mapbiomas, sites_shp, 200)[, "1"],
-  landcover(mapbiomas, sites_shp, 250)[, "1"],
+  landcover(mapbiomas, sites_shp, 200)[, "1"], # 1 = floresta
   landcover(mapbiomas, sites_shp, 300)[, "1"],
-  landcover(mapbiomas, sites_shp, 350)[, "1"],
   landcover(mapbiomas, sites_shp, 400)[, "1"],
-  landcover(mapbiomas, sites_shp, 450)[, "1"],
   landcover(mapbiomas, sites_shp, 500)[, "1"],
-  landcover(mapbiomas, sites_shp, 550)[, "1"],
   landcover(mapbiomas, sites_shp, 600)[, "1"],
-  landcover(mapbiomas, sites_shp, 650)[, "1"],
   landcover(mapbiomas, sites_shp, 700)[, "1"],
-  landcover(mapbiomas, sites_shp, 750)[, "1"],
   landcover(mapbiomas, sites_shp, 800)[, "1"],
-  landcover(mapbiomas, sites_shp, 850)[, "1"],
   landcover(mapbiomas, sites_shp, 900)[, "1"],
-  landcover(mapbiomas, sites_shp, 950)[, "1"],
   landcover(mapbiomas, sites_shp, 1000)[, "1"])
 
 # Coloca os valores de cobertura de floresta lado a lado
