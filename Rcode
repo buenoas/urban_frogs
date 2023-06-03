@@ -533,15 +533,16 @@ comm_validated$site_code = rownames(comm_validated)
 sites_var_comm = merge(x = sites_var, y = comm_validated, by = "site_code",
                        all.x = TRUE, all.y = FALSE, sort = FALSE)
 
-# Adiciona as espescies com zero validacoes humanos (falto-positivos)
-comm_validated$Allobates_sumtuosus = 0
-comm_validated$Atelopus_spumarius = 0
-comm_validated$Chiasmocleis_shudikarensis = 0
-comm_validated$Dendropsophus_minutus = 0
-comm_validated$Elachistocleis_bicolor = 0
+# Adiciona as espescies detectadas pelo algoritmo,
+# mas com zero validacoes humanas (falto-positivos)
+sites_var_comm$Allobates_sumtuosus = 0
+sites_var_comm$Atelopus_spumarius = 0
+sites_var_comm$Chiasmocleis_shudikarensis = 0
+sites_var_comm$Dendropsophus_minutus = 0
+sites_var_comm$Elachistocleis_bicolor = 0
 
 # Adiciona a especie que nao foi detectada pelo algoritmo
-comm_validated$Ameerega_hahneli = NA
+sites_var_comm$Ameerega_hahneli = NA
 
 
 
