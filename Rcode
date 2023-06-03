@@ -460,9 +460,9 @@ sites_var = sites_var[, c("city_name",
                           "canopy_closure_250_m")]
 
 
-##########################
-### ANALISES ESPACIAIS ###
-##########################
+####################
+### FOREST COVER ###
+####################
 
 # Importa o raster da regiao de estudo
 # A regiao de estudo abrange os seis municipios amostrados da Regiao Metropolitana de Manaus
@@ -498,18 +498,50 @@ landcover_buffers = list(
 landcover_buffers = do.call(cbind, landcover_buffers)
 
 # Renomeia as colunas
-colnames(landcover_buffers) = paste0("Forest_cover_",
-                                     seq(50, 1000, 50),
+colnames(landcover_buffers) = paste0("forest_cover_",
+                                     seq(200, 1000, 100),
                                      "_m")
 
-# Adiciona o valores de cobertura florestal ao objeto "sites"
-sites = cbind(sites, landcover_buffers)
+# Adiciona o valores de cobertura florestal ao objeto "sites_var"
+sites_var = cbind(sites_var, landcover_buffers)
 
 
+###############################################
+### JUNTA AS VARIAVEIS LOCAIS E DE PAISAGEM ###
+### COM OS DADOS DE COMPOSICAO DE ESPECIES ####
+###############################################
 
+# Produz a matriz de sitios por especie
+# O valores nas celulas correspondem ao numero de registros
+# 1 registro = 1 deteccao em 1 minuto de gravacao
+comm_validated = as.data.frame(
+  tapply(frogs_validated$occurrence,
+         list(frogs_validated$site, frogs_validated$species),
+         sum))
 
+# Converte NA em zero
+comm_validated[is.na(comm_validated)] = 0
 
+# Substitui espacoes por "_"
+colnames(comm_validated) = gsub(" ", "_", colnames(comm_validated))
 
+# Adiciona uma coluna com o site_Code
+comm_validated$site_code = rownames(comm_validated)
+
+# Junta variaveis locais e de paisagem
+# com dados de composicao de especies
+sites_var_comm = merge(x = sites_var, y = comm_validated, by = "site_code",
+                       all.x = TRUE, all.y = FALSE, sort = FALSE)
+
+# Adiciona as espescies com zero validacoes humanos (falto-positivos)
+comm_validated$Allobates_sumtuosus = 0
+comm_validated$Atelopus_spumarius = 0
+comm_validated$Chiasmocleis_shudikarensis = 0
+comm_validated$Dendropsophus_minutus = 0
+comm_validated$Elachistocleis_bicolor = 0
+
+# Adiciona a especie que nao foi detectada pelo algoritmo
+comm_validated$Ameerega_hahneli = NA
 
 
 
