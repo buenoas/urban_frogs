@@ -419,7 +419,7 @@ sites_var$Site_Name = gsub(" ", "_", sites_var$Site_Name)
 sites_var$Site_Name = gsub("/", "_", sites_var$Site_Name)
 
 # Substitui "/" por "_" na coluna timezone
-sites_var$timezone = gsub("/", "_", sites_var$timezone)
+sites_var$Timezone = gsub("/", "_", sites_var$Timezone)
 
 # Padroniza o nome das colunas
 sites_var = clean_names(sites_var)
@@ -538,11 +538,11 @@ sites_var_comm = merge(x = sites_var, y = comm_validated, by = "site_code",
 
 # Adiciona as espescies detectadas pelo algoritmo,
 # mas com zero validacoes humanas (falto-positivos)
-sites_var_comm$Allobates_sumtuosus = 0
-sites_var_comm$Atelopus_spumarius = 0
-sites_var_comm$Chiasmocleis_shudikarensis = 0
-sites_var_comm$Dendropsophus_minutus = 0
-sites_var_comm$Elachistocleis_bicolor = 0
+sites_var_comm$Allobates_sumtuosus = NA
+sites_var_comm$Atelopus_spumarius = NA
+sites_var_comm$Chiasmocleis_shudikarensis = NA
+sites_var_comm$Dendropsophus_minutus = NA
+sites_var_comm$Elachistocleis_bicolor = NA
 
 # Adiciona a especie que nao foi detectada pelo algoritmo
 sites_var_comm$Ameerega_hahneli = NA
