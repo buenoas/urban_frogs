@@ -24,6 +24,8 @@ library(rgdal)
 library(rgeos)
 library(raster)
 library(iNEXT)
+library(readxl)
+library(janitor)
 
 
 ############################################
@@ -194,7 +196,8 @@ for (i in 1:length(sitios_raref)) {
   
   # Cria uma matriz de incidencia de especies por gravacao
   raref_df = as.data.frame(tapply(raref_site$occurrence,
-                                  list(raref_site$species, raref_site$recording),
+                                  list(raref_site$species,
+                                       raref_site$recording),
                                   sum))
   
   # Converte NA em zero
@@ -203,6 +206,7 @@ for (i in 1:length(sitios_raref)) {
   # Remove a especie dummy
   raref_df = raref_df[-which(rownames(raref_df) == "dummy"), ]
   
+  # Salva o resultado na lista
   raref_list[[i]] = raref_df
   
   print(i)
@@ -271,13 +275,135 @@ comm = ifelse(comm > 0, 1, 0)
 richness = rowSums(comm)
 
 # Adiciona a riqueza de observada de especies ao objeto "sites"
-sites$Richness_observed = richness[match(sites$Name,
+sites$Richness_Observed = richness[match(sites$Name,
                                          names(richness))]
 
 # Adiciona a riqueza rarefeita de especies
-sites$Richness_raref = raref_D$qD[match(sites$Name,
-                                        raref_D$Assemblage)]
+sites$Richness_Rarefied = raref_D$qD[match(sites$Name,
+                                           raref_D$Assemblage)]
 
+
+#############################################
+### IMPORTA OS DADOS DAS VARIAVEIS LOCAIS ###
+#############################################
+
+######################
+### TRONCOS CAIDOS ###
+### SERRAPILHEIRA ####
+######################
+
+# Troncos caidos e serrapilheira
+troncos = as.data.frame(read_xlsx("G:/My Drive/Pesquisa/Parcerias/Paulo Mateus/Serapilheira e troncos caídos.xlsx", sheet = 1))
+
+# Remove linhas e colunas em branco
+troncos = remove_empty(troncos, quiet = FALSE)
+
+# Remove as linhas sem dados (NA)
+troncos = na.omit(troncos)
+
+# Remove as colunas das medias
+troncos$...9 = NULL
+troncos$...17 = NULL
+
+# Renumera as linhas
+rownames(troncos) = NULL
+
+# Renomeia as colunas
+colnames(troncos) = c("Site_Number",
+                      "Site_Name",
+                      "Logs_0-50_m", "Logs_50-100_m",
+                      "Logs_100-150_m", "Logs_150-200_m",
+                      "Logs_200-250_m", "Logs_250-300_m",
+                      "Litter_cm_0-50_m", "Litter_cm_50-100_m",
+                      "Litter_cm_100-150_m", "Litter_cm_150-200_m",
+                      "Litter_cm_200-250_m", "Litter_cm_250-300_m")
+
+# Remove a casa decimal do numero do sitio
+troncos$Site_Number = gsub("\\.0", "", troncos$Site_Number)
+
+# Converter os valores de troncos caidos e serrapilheira em numeric
+troncos[, 3:14] = apply(troncos[, 3:14], 2, as.numeric)
+
+
+##############
+### DOSSEL ###
+##############
+
+# Importa os dados de cobertura e fechamento do dossel
+dossel = as.data.frame(read_xlsx("G:/My Drive/Pesquisa/Parcerias/Paulo Mateus/Cobertura de Dossel.xlsx", sheet = 1))
+
+# Remove as colunas em branco
+dossel$...9 =  NULL
+dossel$...10 = NULL
+
+# Remove as colunas das medias
+dossel$MÉDIA...8 = NULL
+dossel$MÉDIA...18 = NULL
+
+# Remove as colunas com o nome da cidade
+dossel$CIDADE...1 = NULL
+dossel$CIDADE...11 = NULL
+
+# Remove a coluna repetida com o numero do sitio
+dossel$SÍTIO...12 = NULL
+
+# Renomeia as colunas
+colnames(dossel) = c("Site_Number",
+                     "Canopy_Cover_50_m", "Canopy_Cover_100_m",
+                     "Canopy_Cover_150_m", "Canopy_Cover_200_m",
+                     "Canopy_Cover_250_m",
+                     "Canopy_Closure_50_m", "Canopy_Closure_100_m",
+                     "Canopy_Closure_150_m", "Canopy_Closure_200_m",
+                     "Canopy_Closure_250_m")
+
+
+##########################
+### CODIGOS DOS SITIOS ###
+##########################
+
+# Importa a tabela com a correspondencia entre o Site_Number e Name da tabela 'sites'
+consolidada = as.data.frame(read_xlsx("G:/My Drive/Pesquisa/Parcerias/Paulo Mateus/Variaveis ambientais tabela consolidada.xlsx", sheet = 1))
+
+# Arruma o numero do sitio localizado na Ducke
+# Nos arquivos Serapilheira e troncos caídos.xlsx e Cobertura de Dossel.xlsx
+# O numero do sitio na Ducke eh o 25 (correto)
+# No arquivo Variaveis ambientais tabela consolidada.xlsx
+# O numero do sitio na Ducke eh o 23 (errado)
+consolidada$plot[consolidada$plot == 23] = 25
+
+# Adiciona o Name dos sitios
+troncos$Name = consolidada$`Point ID`[match(troncos$Site_Number,
+                                            consolidada$plot)]
+
+dossel$Name = consolidada$`Point ID`[match(dossel$Site_Number,
+                                           consolidada$plot)]
+
+
+######################
+### JUNTA OS DADOS ###
+######################
+
+# Merge a tabela sites do Arbimon com as variaveis locais
+sites_locvar = merge(x = sites, y = troncos, by = "Name",
+                     all.x = TRUE, all.y = TRUE, sort = FALSE)
+
+# Adiciona uma coluna com o codigo da cidade
+sites_locvar$City_Code = word(sites_locvar$Name, 1, sep = "_")
+
+# Adiciona uma coluna com o nome da cidade
+sites_locvar$City_Name = "Iranduba"
+sites_locvar$City_Name[sites_locvar$City_Code == "IT"] = "Itacoatiara"
+sites_locvar$City_Name[sites_locvar$City_Code == "MA"] = "Manaus"
+sites_locvar$City_Name[sites_locvar$City_Code == "MC"] = "Manacapuru"
+sites_locvar$City_Name[sites_locvar$City_Code == "PF"] = "Presidente Figueiredo"
+sites_locvar$City_Name[sites_locvar$City_Code == "RPE"] = "Rio Preto da Eva"
+
+# Renomeia o nome da coluna Name para Site_Code
+colnames(sites_locvar)[colnames(sites_locvar) == "Name"] = "Site_Code"
+
+# Reorganiza a tabela e mantem as colunas relevantes
+sites_locvar = sites_locvar[, c(11, 12, 1, 4, 3, 7:10, 13:24)]
+head(sites_locvar)
 
 ##########################
 ### ANALISES ESPACIAIS ###
@@ -629,10 +755,10 @@ for (i in 1:ncol(freq_hour_prop)) {
 # Pearson's product-moment correlation between number of species and habitat amount
 # across 40 landscape scales
 sites_ = sites[, c(9:30)]
-sites_ = sites_[-which(is.na(sites_$Richness_observed)), ]
+sites_ = sites_[-which(is.na(sites_$Richness_Observed)), ]
 
 buffer = apply(sites_[, 3:ncol(sites_)], 2, function(z)
-  cor.test(z, sites_$Richness_observed))
+  cor.test(z, sites_$Richness_Observed))
 
 # Convert the results stored as a 'list' object into a 'matrix' object
 buffer = do.call(rbind, lapply(buffer, function(z) z[4]))
