@@ -269,11 +269,8 @@ comm = as.data.frame(tapply(frogs_raw$occurrence,
 # Transforma NA em zero
 comm[is.na(comm)] = 0
 
-# Transforma a matriz em presenca-ausencia
-comm = ifelse(comm > 0, 1, 0)
-
 # Calcula a riqueza observada de especies por sitios
-richness = rowSums(comm)
+richness = rowSums(ifelse(comm > 0, 1, 0))
 
 # Adiciona a riqueza de observada de especies ao objeto "sites"
 sites$Richness_Observed = richness[match(sites$Name,
@@ -385,37 +382,38 @@ dossel$Name = consolidada$`Point ID`[match(dossel$Site_Number,
 ######################
 
 # Merge a tabela sites do Arbimon com as variaveis locais
-sites_locvar = merge(x = sites, y = troncos, by = "Name",
-                     all.x = TRUE, all.y = TRUE, sort = FALSE)
+sites_var = merge(x = sites, y = troncos, by = "Name",
+                  all.x = TRUE, all.y = FALSE, sort = FALSE)
 
 # Adiciona uma coluna com o codigo da cidade
-sites_locvar$City_Code = word(sites_locvar$Name, 1, sep = "_")
+sites_var$City_Code = word(sites_var$Name, 1, sep = "_")
 
 # Adiciona uma coluna com o nome da cidade
-sites_locvar$City_Name = "Iranduba"
-sites_locvar$City_Name[sites_locvar$City_Code == "IT"] = "Itacoatiara"
-sites_locvar$City_Name[sites_locvar$City_Code == "MA"] = "Manaus"
-sites_locvar$City_Name[sites_locvar$City_Code == "MC"] = "Manacapuru"
-sites_locvar$City_Name[sites_locvar$City_Code == "PF"] = "Presidente_Figueiredo"
-sites_locvar$City_Name[sites_locvar$City_Code == "RPE"] = "Rio_Preto_da_Eva"
+sites_var$City_Name = "Iranduba"
+sites_var$City_Name[sites_var$City_Code == "IT"] = "Itacoatiara"
+sites_var$City_Name[sites_var$City_Code == "MA"] = "Manaus"
+sites_var$City_Name[sites_var$City_Code == "MC"] = "Manacapuru"
+sites_var$City_Name[sites_var$City_Code == "PF"] = "Presidente_Figueiredo"
+sites_var$City_Name[sites_var$City_Code == "RPE"] = "Rio_Preto_da_Eva"
 
 # Renomeia o nome da coluna Name para Site_Code
-colnames(sites_locvar)[colnames(sites_locvar) == "Name"] = "Site_Code"
+colnames(sites_var)[colnames(sites_var) == "Name"] = "Site_Code"
 
 # Renomeia o nome da coluna Name para Id
-colnames(sites_locvar)[colnames(sites_locvar) == "Id"] = "Site_Id_Arbimon"
+colnames(sites_var)[colnames(sites_var) == "Id"] = "Site_Id_Arbimon"
 
 # Remove caracteres especiais da coluna Site_Name
 # Substitui espacos por "_" na coluna Site_Name
-sites_locvar$Site_Name = stri_trans_general(sites_locvar$Site_Name,
-                                            "Latin-ASCII")
-sites_locvar$Site_Name = gsub(" ", "_", sites_locvar$Site_Name)
+sites_var$Site_Name = stri_trans_general(sites_var$Site_Name,
+                                         "Latin-ASCII")
+sites_var$Site_Name = gsub(" ", "_", sites_var$Site_Name)
+sites_var$Site_Name = gsub("/", "_", sites_var$Site_Name)
 
 # Padroniza o nome das colunas
-sites_locvar = clean_names(sites_locvar)
+sites_var = clean_names(sites_var)
 
-# Reorganiza a tabela e mantem as colunas relevantes
-sites_locvar = sites_locvar[, c(26, 25, 11, 12, 1, 2, 4, 3, 5, 6, 7:10, 13:24)]
+# Ordena as colunas
+sites_var = sites_var[, c(26, 25, 11, 12, 1, 2, 4, 3, 5, 6, 7:10, 13:24)]
 
 
 ##########################
