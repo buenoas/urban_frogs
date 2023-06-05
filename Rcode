@@ -1368,3 +1368,54 @@ gg_pcoa
 
 ggsave(gg_pcoa, filename = "nmds.jpg", dpi = 600,
        width = 15, height = 15, units = "cm")
+
+
+
+#########################
+### RASTER TO POLYGON ###
+#########################
+
+pt = sites_shp[1, ]
+b = buffer(x = pt,
+           width = 1000,
+           dissolve = FALSE)
+
+mapbiomas_b = crop(mapbiomas, b)
+plot(mapbiomas_b)
+points(pt)
+plot(b, add = T)
+
+b_mask = mask(mapbiomas_b, b)
+plot(b_mask)
+points(pt)
+plot(b, add = T)
+
+# Converte raster em poligono
+shp =
+  st_as_sf(
+    disaggregate(
+      rasterToPolygons(
+        b_mask,
+        fun = function(x){x == 3}, # 3 = forest
+        n = 8,
+        na.rm = TRUE,
+        digits = 6,
+        dissolve = TRUE)))
+
+# Visualiza a paisagem
+plot(shp)
+
+# Forest cover (metric of habitat loss)
+fc_area = sum(st_area(shp)) # soma da area dos fragmentos
+lc_area = st_area(st_as_sf(b)) # area da paisagem
+fc_perc = fc_area/lc_area * 100 # porcentagem de floresta
+fc_perc
+
+# Number of fragments (metric of fragmentation)
+number_frags = length(shp$geometry)
+number_frags
+
+# Edge density (metric of habitat degradation)
+edge_length = sum(st_length(st_cast(shp, "MULTILINESTRING")))
+edge_density = edge_length / lc_area
+edge_density
