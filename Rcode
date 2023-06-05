@@ -1419,3 +1419,6 @@ number_frags
 edge_length = sum(st_length(st_cast(shp, "MULTILINESTRING")))
 edge_density = edge_length / lc_area
 edge_density
+
+
+# TESTAR A CORRELACAO ENTRE "Forest Formation" (pixel 3) E "Urban Area" (pixel 24)
