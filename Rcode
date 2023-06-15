@@ -1422,3 +1422,50 @@ edge_density
 
 
 # TESTAR A CORRELACAO ENTRE "Forest Formation" (pixel 3) E "Urban Area" (pixel 24)
+
+
+# CRIA BUFFERS EM TORNOS DOS SAMPLE SITES
+sitesToRemove = c(which(sites_shp@data$site_code == "MA_11"),
+                  which(sites_shp@data$site_code == "IT_6_B"),
+                  which(sites_shp@data$site_code == "MA_5_B"),
+                  which(sites_shp@data$site_code == "MA_5_C"),
+                  which(sites_shp@data$site_code == "RPE_5_B"),
+                  which(sites_shp@data$site_code == "IT_7_B"))
+
+buffer1000 = buffer(x = sites_shp[-sitesToRemove, ],
+                    width = 1000,
+                    dissolve = FALSE)
+buffer900 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 900,
+                   dissolve = FALSE)
+buffer800 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 800,
+                   dissolve = FALSE)
+buffer700 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 700,
+                   dissolve = FALSE)
+buffer600 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 600,
+                   dissolve = FALSE)
+buffer500 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 500,
+                   dissolve = FALSE)
+buffer400 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 400,
+                   dissolve = FALSE)
+buffer300 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 300,
+                   dissolve = FALSE)
+buffer200 = buffer(x = sites_shp[-sitesToRemove, ],
+                   width = 200,
+                   dissolve = FALSE)
+buffer0 = sites_shp[-sitesToRemove, ]
+
+# JUNTA OS BUFFERS EM UM SHAPEFILE
+buffers = rbind(buffer1000, buffer900, buffer800, buffer700, buffer600, buffer500, buffer400, buffer300, buffer200)
+
+# SALVA O SHAPEFILE
+writeOGR(obj = buffer1000,
+         dsn = "G:/My Drive/Pesquisa/Parcerias/Paulo Mateus",
+         layer = "buffer1000",
+         driver = "ESRI Shapefile")
