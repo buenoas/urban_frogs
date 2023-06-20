@@ -433,9 +433,9 @@ sites_var = clean_names(sites_var)
 # Ordena as colunas
 sites_var = sites_var[, c("city_name",
                           "city_code",
-                          "site_number",
                           "site_name",
                           "site_code",
+                          "site_number",
                           "site_id_arbimon",
                           "longitude",
                           "latitude",
