@@ -322,6 +322,9 @@ troncos$Site_Number = gsub("\\.0", "", troncos$Site_Number)
 # Converter os valores de troncos caidos e serrapilheira em numeric
 troncos[, 3:14] = apply(troncos[, 3:14], 2, as.numeric)
 
+# Corrige o "Site_Number" da Ducke de 25 (errado) para 23 (correto)
+troncos$Site_Number[troncos$Site_Number == 25] = 23
+
 
 ##############
 ### DOSSEL ###
@@ -354,6 +357,9 @@ colnames(dossel) = c("Site_Number",
                      "Canopy_Closure_150_m", "Canopy_Closure_200_m",
                      "Canopy_Closure_250_m")
 
+# Corrige o "Site_Number" da Ducke de 25 (errado) para 23 (correto)
+dossel$Site_Number[dossel$Site_Number == 25] = 23
+
 
 ##########################
 ### CODIGOS DOS SITIOS ###
@@ -364,10 +370,10 @@ consolidada = as.data.frame(read_xlsx("G:/My Drive/Pesquisa/Parcerias/Paulo Mate
 
 # Arruma o numero do sitio localizado na Ducke
 # Nos arquivos Serapilheira e troncos caídos.xlsx e Cobertura de Dossel.xlsx
-# O numero do sitio na Ducke eh o 25 (correto)
+# O numero do sitio na Ducke eh o 25 (correto) # A Cintia me disse que esse eh o numero errado
 # No arquivo Variaveis ambientais tabela consolidada.xlsx
-# O numero do sitio na Ducke eh o 23 (errado)
-consolidada$plot[consolidada$plot == 23] = 25
+# O numero do sitio na Ducke eh o 23 (errado) # A Cintia me disse que sse eh o numero certo
+# consolidada$plot[consolidada$plot == 23] = 25
 
 # Adiciona o Name dos sitios
 troncos$Name = consolidada$`Point ID`[match(troncos$Site_Number,
