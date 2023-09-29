@@ -477,10 +477,13 @@ study_region_utm =
           method = "near")
 
 # Importa as coordenadas dos locais de amostragem
-pts = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sites-export.csv") %>%
+pts = sites %>%
   st_as_sf(coords = c("Longitude", "Latitude")) %>%
   st_set_crs(4326) %>% # codigo para WGS 84
   st_transform(st_crs(32721)) # projeta as coordenadas em UTM 21 S (32721)
+
+
+### TIRAR OS SITIOS DOS SAPOS E FROGS. TALVEZ PUXAR O OBJETO sites
 
 # Plota o raster e os pontos
 plot(study_region_utm)
