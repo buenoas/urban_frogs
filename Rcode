@@ -4,7 +4,7 @@
 ###############################################
 
 # Define a area de trabalho
-#setwd("C:/Users/carla/OneDrive/Documentos/diagrama_rosas_Paulo")
+setwd("G:/My Drive/Pesquisa/Parcerias/Paulo Mateus")
 
 # Limpa a area de trabalho
 remove(list = ls())
@@ -19,14 +19,14 @@ set.seed(2092270023) # valor obtido com o comando "sample(.Machine$integer.max, 
 library(vegan)
 library(stringr)
 library(stringi)
-library(plyr)
 library(ggplot2)
-library(rgdal)
-library(rgeos)
-library(raster)
 library(iNEXT)
 library(readxl)
 library(janitor)
+library(sf)
+library(terra)
+library(landscapemetrics)
+library(corrplot)
 
 
 ############################################
@@ -368,13 +368,6 @@ dossel$Site_Number[dossel$Site_Number == 25] = 23
 # Importa a tabela com a correspondencia entre o Site_Number e Name da tabela 'sites'
 consolidada = as.data.frame(read_xlsx("G:/My Drive/Pesquisa/Parcerias/Paulo Mateus/Variaveis ambientais tabela consolidada.xlsx", sheet = 1))
 
-# Arruma o numero do sitio localizado na Ducke
-# Nos arquivos Serapilheira e troncos caídos.xlsx e Cobertura de Dossel.xlsx
-# O numero do sitio na Ducke eh o 25 (correto) # A Cintia me disse que esse eh o numero errado
-# No arquivo Variaveis ambientais tabela consolidada.xlsx
-# O numero do sitio na Ducke eh o 23 (errado) # A Cintia me disse que esse eh o numero certo
-# consolidada$plot[consolidada$plot == 23] = 25
-
 # Adiciona o Name dos sitios
 troncos$Name = consolidada$`Point ID`[match(troncos$Site_Number,
                                             consolidada$plot)]
@@ -469,50 +462,94 @@ sites_var = sites_var[, c("city_name",
                           "canopy_closure_250_m")]
 
 
-####################
-### FOREST COVER ###
-####################
+##################################
+### IMPORTA OS DADOS ESPACIAIS ###
+##################################
 
-# Importa o raster da regiao de estudo
-# A regiao de estudo abrange os seis municipios amostrados da Regiao Metropolitana de Manaus
-# O raster do MapBiomas corresponde a colecao 7.1, ano 2020
-mapbiomas = raster("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
+# Importa o raster do MapBiomas
+study_region =
+  rast("https://raw.githubusercontent.com/buenoas/urban_frogs/main/study_region.tif")
 
-# Binariza o raster do MapBiomas
-# Pixel value 3 = floresta (1); demais pixel values = nao-floresta (0)
-values(mapbiomas) = ifelse(values(mapbiomas) == 3, 1, 0)
+# Projeta o raster em UTM 21 S
+study_region_utm =
+  project(x = study_region,
+          y = "epsg:32721", # projeta o raster em UTM 21 S (32721)
+          method = "near")
 
-# Transforma as coordenadas dos sitios em um shapefile de pontos
-sites_shp = SpatialPointsDataFrame(coords = sites_var[, c("longitude", "latitude")],
-                                   data = sites_var,
-                                   proj4string = mapbiomas@crs)
+# Importa as coordenadas dos locais de amostragem
+pts = read.csv("https://raw.githubusercontent.com/buenoas/urban_frogs/main/sites-export.csv") %>%
+  st_as_sf(coords = c("Longitude", "Latitude")) %>%
+  st_set_crs(4326) %>% # codigo para WGS 84
+  st_transform(st_crs(32721)) # projeta as coordenadas em UTM 21 S (32721)
 
-# Carrega a funcao "landcover" para calcular a cobertura de floresta para varios tamanhos de buffer
-source("https://raw.githubusercontent.com/buenoas/R-functions/main/landcover")
+# Plota o raster e os pontos
+plot(study_region_utm)
+plot(pts$geometry, add = TRUE)
 
-# Calcular a cobertura de floresta para varios tamanhos de buffer
-# "3" = floresta
-landcover_buffers = list(
-  landcover(mapbiomas, sites_shp, 200)[, "1"], # 1 = floresta
-  landcover(mapbiomas, sites_shp, 300)[, "1"],
-  landcover(mapbiomas, sites_shp, 400)[, "1"],
-  landcover(mapbiomas, sites_shp, 500)[, "1"],
-  landcover(mapbiomas, sites_shp, 600)[, "1"],
-  landcover(mapbiomas, sites_shp, 700)[, "1"],
-  landcover(mapbiomas, sites_shp, 800)[, "1"],
-  landcover(mapbiomas, sites_shp, 900)[, "1"],
-  landcover(mapbiomas, sites_shp, 1000)[, "1"])
+# Verifica a paisagem
+check_landscape(study_region_utm)
 
-# Coloca os valores de cobertura de floresta lado a lado
-landcover_buffers = do.call(cbind, landcover_buffers)
+############################
+### METRICAS DE PAISAGEM ###
+############################
 
-# Renomeia as colunas
-colnames(landcover_buffers) = paste0("forest_cover_",
-                                     seq(200, 1000, 100),
-                                     "_m")
+# Calcula as metricas de paisagem para diferentes buffers
+buffers = seq(200, 1000, 100)
+
+landscape_predictors_list = list()
+
+for (i in 1:length(buffers)) {
+  
+  landscape_predictors =
+    sample_lsm(study_region_utm,
+               y = pts,
+               plot_id = pts$Name,
+               shape = "circle",
+               size = buffers[i],
+               all_classes = TRUE,
+               directions = 4,
+               what = c("lsm_c_pland", # Forest cover (%)
+                        "lsm_c_ed", # Edge density (m/m^2)
+                        "lsm_c_np")) # Number of fragments (n)
+  
+  # Seleciona apenas a classe "forest" (pixel value 3)
+  landscape_predictors =
+    subset(landscape_predictors, class == 3)
+  
+  # Organiza os valores das metricas em uma data frame
+  landscape_predictors_df = 
+    tapply(landscape_predictors$value,
+           list(landscape_predictors$plot_id, landscape_predictors$metric),
+           unique) %>%
+    data.frame()
+  
+  # Reordena as colunas
+  landscape_predictors_df =
+    landscape_predictors_df[, c("pland", "ed", "np")]
+  
+  # Renomeia as colunas para adicionar informar do buffer
+  colnames(landscape_predictors_df) =
+    paste0(colnames(landscape_predictors_df), "_", buffers[i], "m")
+  
+  # Salva os resultados
+  landscape_predictors_list[[i]] = landscape_predictors_df
+  
+  print(i)
+  
+}
+
+# Combina os resultados em uma data frase
+landscape_predictors_buffers = do.call(cbind, landscape_predictors_list)
+
+# Converte NA em zero
+landscape_predictors_buffers[is.na(landscape_predictors_buffers)] = 0
+
+# Adiciona uma coluna com o site_code
+landscape_predictors_buffers$site_code = rownames(landscape_predictors_buffers)
 
 # Adiciona o valores de cobertura florestal ao objeto "sites_var"
-sites_var = cbind(sites_var, landcover_buffers)
+sites_var = merge(x = sites_var, y = landscape_predictors_buffers,
+                  by = "site_code", all.x = TRUE, all.y = FALSE, sort = TRUE)
 
 
 ###############################################
@@ -553,4 +590,8 @@ sites_var_comm$Elachistocleis_bicolor = NA
 # Adiciona a especie que nao foi detectada pelo algoritmo
 sites_var_comm$Ameerega_hahneli = NA
 
+# Remove a coluna timezone
+sites_var_comm$timezone = NULL
+
+# Salva a planilha de dados com as variaveis resposta e preditoras
 write.csv(sites_var_comm, "sites_var_comm.csv", row.names = FALSE)
