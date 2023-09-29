@@ -372,7 +372,7 @@ consolidada = as.data.frame(read_xlsx("G:/My Drive/Pesquisa/Parcerias/Paulo Mate
 # Nos arquivos Serapilheira e troncos caídos.xlsx e Cobertura de Dossel.xlsx
 # O numero do sitio na Ducke eh o 25 (correto) # A Cintia me disse que esse eh o numero errado
 # No arquivo Variaveis ambientais tabela consolidada.xlsx
-# O numero do sitio na Ducke eh o 23 (errado) # A Cintia me disse que sse eh o numero certo
+# O numero do sitio na Ducke eh o 23 (errado) # A Cintia me disse que esse eh o numero certo
 # consolidada$plot[consolidada$plot == 23] = 25
 
 # Adiciona o Name dos sitios
