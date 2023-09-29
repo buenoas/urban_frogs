@@ -288,7 +288,7 @@ sites$Richness_Rarefied = raref_D$qD[match(sites$Name,
 ######################
 
 # Troncos caidos e serrapilheira
-troncos = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/serapilheira_troncos_caidos.xlsx", sheet = 1))
+troncos = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/serrapilheira_troncos_caidos.xlsx", sheet = 1))
 
 # Remove linhas e colunas em branco
 troncos = remove_empty(troncos, quiet = FALSE)
