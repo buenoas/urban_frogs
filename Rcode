@@ -288,7 +288,7 @@ sites$Richness_Rarefied = raref_D$qD[match(sites$Name,
 ######################
 
 # Troncos caidos e serrapilheira
-troncos = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/Serapilheira e troncos caídos.xlsx", sheet = 1))
+troncos = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/serapilheira_troncos_caidos.xlsx", sheet = 1))
 
 # Remove linhas e colunas em branco
 troncos = remove_empty(troncos, quiet = FALSE)
@@ -328,7 +328,7 @@ troncos$Site_Number[troncos$Site_Number == 25] = 23
 ##############
 
 # Importa os dados de cobertura e fechamento do dossel
-dossel = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/Cobertura de Dossel.xlsx", sheet = 1))
+dossel = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/cobertura_dossel.xlsx", sheet = 1))
 
 # Remove as colunas em branco
 dossel$...9 =  NULL
@@ -363,7 +363,7 @@ dossel$Site_Number[dossel$Site_Number == 25] = 23
 ##########################
 
 # Importa a tabela com a correspondencia entre o Site_Number e Name da tabela 'sites'
-consolidada = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/Variaveis ambientais tabela consolidada.xlsx", sheet = 1))
+consolidada = as.data.frame(read_xlsx("https://raw.githubusercontent.com/buenoas/urban_frogs/main/variaveis_ambientais_tabela_consolidada.xlsx", sheet = 1))
 
 # Adiciona o Name dos sitios
 troncos$Name = consolidada$`Point ID`[match(troncos$Site_Number,
