@@ -163,6 +163,7 @@ recordings = recordings[, c(1, 2, 5, 4, 3, 6)]
 # Mantem apenas as colunas relevantes
 recordings_raref = recordings[, c("filename",
                                   "site")]
+
 # Renomeia a coluna "filename"
 colnames(recordings_raref)[1] = "recording"
 
